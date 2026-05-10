@@ -8,6 +8,15 @@
     "userInterfaceStyle": "automatic",
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b74db023-3170-4443-9d76-a04c27ee0f06"
+      }
+    },
+    "android": {
+      "package": "com.mix_london77.VolunteerHubClean"
+    }
   }
 }

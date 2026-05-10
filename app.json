@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "VolunteerHubClean",
+    "slug": "VolunteerHubClean",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "volunteerhub",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

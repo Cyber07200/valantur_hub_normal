@@ -17,6 +17,10 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
+      },
+      "autoIncrement": true,
+      "env": {
+        "NPM_INSTALL_COMMAND": "npm install --legacy-peer-deps"
       }
     },
     "production": {
@@ -24,6 +28,9 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "NPM_INSTALL_COMMAND": "npm install --legacy-peer-deps"
       }
     }
   },

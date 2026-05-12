@@ -1,7 +1,7 @@
 // app/event/[id].js
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Clock, Users, CheckCircle } from 'lucide-react-native';
@@ -10,9 +10,10 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { useBookings } from '../../src/hooks/useBookings';
 import { fetchEventById } from '../../src/services/supabase';
 import { safeHaptic } from '../../src/utils/platform';
-import { log, logError, logStart, logEnd, startTimer, endTimer } from '../../src/utils/logger';
+import { showBookingNotification, scheduleReminder, scheduleHourReminder } from '../../src/utils/notifications';
 
-const MODULE = 'EVENT_DETAIL';
+// Кеш мероприятий
+const EVENT_CACHE = {};
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -21,84 +22,92 @@ export default function EventDetailScreen() {
   const user = useAuthStore((state) => state.user);
   const { bookEvent, bookings } = useBookings();
 
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState(() => EVENT_CACHE[id] || null);
+  const [loading, setLoading] = useState(() => !EVENT_CACHE[id]);
   const [bookingInProgress, setBookingInProgress] = useState(false);
-  const [error, setError] = useState(null);
-  
-  const loadedIdRef = useRef(null);
-  const loadingRef = useRef(false);
 
-useEffect(() => {
-  // Если это же мероприятие уже загружено — НЕ грузим
-  if (loadedIdRef.current === id && event) {
-    setLoading(false);
-    return;
-  }
-
-  // Предотвращаем параллельные загрузки
-  if (loadingRef.current) return;
-
-  let cancelled = false;
-  loadingRef.current = true;
-
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await fetchEventById(id);
-
-      if (!cancelled) {
-        if (data) {
-          setEvent(data);
-          loadedIdRef.current = id;
-        } else {
-          setError('Мероприятие не найдено');
-        }
-      }
-    } catch (err) {
-      if (!cancelled) setError('Ошибка загрузки');
-    } finally {
-      if (!cancelled) {
-        setLoading(false);
-        loadingRef.current = false;
-      }
+  useEffect(() => {
+    if (!id) return;
+    
+    // Если есть в кеше — сразу показываем
+    if (EVENT_CACHE[id]) {
+      setEvent(EVENT_CACHE[id]);
+      setLoading(false);
+      return;
     }
-  };
 
-  load();
+    let cancelled = false;
 
-  return () => {
-    cancelled = true;
-  };
-}, [id]);
+    const load = async () => {
+      setLoading(true);
+      const data = await fetchEventById(id);
+      if (!cancelled && data) {
+        EVENT_CACHE[id] = data;
+        setEvent(data);
+      }
+      if (!cancelled) setLoading(false);
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [id]);
 
   const isBooked = bookings.some((b) => b.event_id === id && b.status === 'registered');
 
   const handleBook = async () => {
     if (!user) {
-      Alert.alert('Нужно войти', '', [
-        { text: 'Отмена', style: 'cancel' },
-        { text: 'Войти', onPress: () => router.push('/auth/login') },
-      ]);
+      global.showAlert?.({
+        type: 'info', title: 'Нужно войти', message: 'Авторизуйтесь, чтобы записаться',
+        confirmText: 'Войти', cancelText: 'Отмена',
+        onConfirm: () => router.push('/auth/login'),
+      });
       return;
     }
 
-    setBookingInProgress(true);
-    safeHaptic('medium');
+    if (!event) return;
 
-    const result = await bookEvent(id);
-    
-    Alert.alert(result.success ? 'Успешно!' : 'Ошибка', result.message);
+    const eventDate = new Date(event.event_date);
+    const formattedDate = eventDate.toLocaleDateString('ru-RU', {
+      weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+    });
 
-    if (result.success) {
-      safeHaptic('success');
-      const updated = await fetchEventById(id);
-      if (updated) setEvent(updated);
-    }
+    global.showAlert?.({
+      type: 'success',
+      title: 'Записаться?',
+      message: `${event.title}\n📅 ${formattedDate}\n📍 ${event.city}\n🕐 ${event.duration_hours} ч\n+${event.duration_hours} ч в профиль`,
+      confirmText: 'Да, записаться',
+      cancelText: 'Отмена',
+      onConfirm: async () => {
+        setBookingInProgress(true);
+        safeHaptic('medium');
 
-    setBookingInProgress(false);
+        const result = await bookEvent(id);
+
+        if (result.success) {
+          safeHaptic('success');
+          
+          global.showNotification?.('success', 'Вы записаны!', `${event.title}\n+${event.duration_hours} ч`);
+
+          showBookingNotification(event.title, event.event_date, event.city);
+          scheduleReminder(event.title, event.event_date, id);
+          scheduleHourReminder(event.title, event.event_date, id);
+
+          // Обновляем кеш и стейт
+          const updated = await fetchEventById(id);
+          if (updated) {
+            EVENT_CACHE[id] = updated;
+            setEvent(updated);
+          }
+
+          // Обновляем профиль
+          global.refreshProfile?.();
+        } else {
+          global.showAlert?.({ type: 'error', title: 'Ошибка', message: result.message, confirmText: 'OK' });
+        }
+
+        setBookingInProgress(false);
+      },
+    });
   };
 
   if (loading) {
@@ -110,12 +119,10 @@ useEffect(() => {
     );
   }
 
-  if (error || !event) {
+  if (!event) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text, fontSize: 18, marginBottom: 12 }}>
-          {error || 'Не найдено'}
-        </Text>
+        <Text style={{ color: colors.text, fontSize: 18, marginBottom: 12 }}>Мероприятие не найдено</Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={{ color: colors.primary, fontSize: 16 }}>← Назад</Text>
         </TouchableOpacity>
@@ -127,31 +134,24 @@ useEffect(() => {
   const formattedDate = eventDate.toLocaleDateString('ru-RU', {
     weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
   });
-
   const spotsLeft = event.max_volunteers ? event.max_volunteers - event.current_volunteers : null;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.title, { color: colors.text }]}>{event.title}</Text>
-
         <View style={[styles.badge, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.badgeText, { color: colors.primary }]}>{event.category}</Text>
         </View>
-
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.row}>
             <MapPin size={20} color={colors.primary} />
             <View style={styles.textBlock}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Место</Text>
-              <Text style={[styles.value, { color: colors.text }]}>
-                {event.city}{event.address ? `, ${event.address}` : ''}
-              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>{event.city}{event.address ? `, ${event.address}` : ''}</Text>
             </View>
           </View>
-
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
           <View style={styles.row}>
             <Clock size={20} color={colors.primary} />
             <View style={styles.textBlock}>
@@ -160,16 +160,12 @@ useEffect(() => {
               <Text style={[styles.value, { color: colors.text }]}>{event.duration_hours} ч</Text>
             </View>
           </View>
-
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
           <View style={styles.row}>
             <Users size={20} color={colors.primary} />
             <View style={styles.textBlock}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Участники</Text>
-              <Text style={[styles.value, { color: colors.text }]}>
-                {event.current_volunteers}{event.max_volunteers ? ` / ${event.max_volunteers}` : ''} волонтеров
-              </Text>
+              <Text style={[styles.value, { color: colors.text }]}>{event.current_volunteers}{event.max_volunteers ? ` / ${event.max_volunteers}` : ''} волонтеров</Text>
               {spotsLeft !== null && (
                 <Text style={{ color: spotsLeft <= 3 ? '#FF9500' : colors.success, fontSize: 13, fontWeight: '600', marginTop: 2 }}>
                   {spotsLeft <= 0 ? 'Мест нет' : `Свободно: ${spotsLeft}`}
@@ -178,7 +174,6 @@ useEffect(() => {
             </View>
           </View>
         </View>
-
         {event.description && (
           <View style={styles.desc}>
             <Text style={[styles.descTitle, { color: colors.text }]}>Описание</Text>
@@ -186,7 +181,6 @@ useEffect(() => {
           </View>
         )}
       </ScrollView>
-
       <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         {isBooked ? (
           <View style={[styles.bookedBtn, { backgroundColor: colors.success + '20' }]}>
@@ -200,11 +194,7 @@ useEffect(() => {
             disabled={bookingInProgress || spotsLeft === 0}
             activeOpacity={0.8}
           >
-            {bookingInProgress ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.bookBtnText}>{spotsLeft === 0 ? 'Мест нет' : 'Записаться'}</Text>
-            )}
+            <Text style={styles.bookBtnText}>{spotsLeft === 0 ? 'Мест нет' : 'Записаться'}</Text>
           </TouchableOpacity>
         )}
       </View>

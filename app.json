@@ -1,22 +1,33 @@
 {
   "expo": {
-    "name": "VolunteerHubClean",
-    "slug": "VolunteerHubClean",
+    "name": "Волонтер Хаб",
+    "slug": "volunteerhubclean",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "volunteerhub",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "plugins": [
-      "expo-router"
-    ],
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "b74db023-3170-4443-9d76-a04c27ee0f06"
-      }
+    "scheme": "volunteerhub",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6366F1"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.volunteerhub.app"
     },
     "android": {
-      "package": "com.mix_london77.VolunteerHubClean"
-    }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6366F1"
+      },
+      "package": "com.volunteerhub.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

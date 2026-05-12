@@ -1,7 +1,7 @@
 // src/stores/authStore.js
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../services/supabase';
+import { supabase, clearAllCache } from '../services/supabase';
 import { log, logError, logStart, logEnd } from '../utils/logger';
 
 const MODULE = 'AUTH_STORE';
@@ -58,23 +58,15 @@ export const useAuthStore = create((set) => ({
     return { success: true };
   },
 
-  signUp: async (email, password, fullName) => {
-    logStart(MODULE, `Регистрация: ${email}`);
-    
+  signUp: async (email, password, fullName, nickname) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, nickname: nickname },
       },
     });
-    
-    if (error) {
-      logError(MODULE, 'Ошибка регистрации', error);
-      return { success: false, message: error.message };
-    }
-    
-    logEnd(MODULE, 'Регистрация выполнена');
+    if (error) return { success: false, message: error.message };
     return { success: true };
   },
 
@@ -90,6 +82,9 @@ export const useAuthStore = create((set) => ({
       // Принудительная очистка
       set({ user: null, session: null });
       await AsyncStorage.removeItem('supabase.auth.token');
+      
+      // ✅ Очищаем весь кеш при выходе
+      clearAllCache();
       
       logEnd(MODULE, 'Выход выполнен');
     } catch (error) {

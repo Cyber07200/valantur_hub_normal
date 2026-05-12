@@ -1,13 +1,7 @@
 // app/(tabs)/bookings.js
 import React from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
+  View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, MapPin, Clock, XCircle } from 'lucide-react-native';
@@ -16,6 +10,7 @@ import { useBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/stores/authStore';
 import EmptyState from '../../src/components/EmptyState';
 import { safeHaptic } from '../../src/utils/platform';
+import { showCancelNotification } from '../../src/utils/notifications';
 
 export default function BookingsScreen() {
   const { colors } = useTheme();
@@ -29,17 +24,10 @@ export default function BookingsScreen() {
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Мои записи</Text>
         </View>
-        <EmptyState
-          icon={Calendar}
-          title="Нужно войти"
-          message="Авторизуйтесь, чтобы видеть свои записи на мероприятия"
-        />
+        <EmptyState icon={Calendar} title="Нужно войти" message="Авторизуйтесь, чтобы видеть свои записи" />
         <TouchableOpacity
           style={[styles.loginButton, { backgroundColor: colors.primary }]}
-          onPress={() => {
-            safeHaptic('medium');
-            router.push('/auth/login');
-          }}
+          onPress={() => { safeHaptic('medium'); router.push('/auth/login'); }}
         >
           <Text style={styles.loginButtonText}>Войти</Text>
         </TouchableOpacity>
@@ -47,22 +35,29 @@ export default function BookingsScreen() {
     );
   }
 
-  const handleCancel = (bookingId, eventId, eventTitle) => {
-    Alert.alert(
-      'Отменить запись?',
-      `Вы уверены, что хотите отменить запись на "${eventTitle}"?`,
-      [
-        { text: 'Нет', style: 'cancel' },
-        {
-          text: 'Да, отменить',
-          style: 'destructive',
-          onPress: async () => {
-            safeHaptic('success');
-            await cancelBooking(bookingId, eventId);
-          },
-        },
-      ]
-    );
+  const handleCancel = (bookingId, eventId, eventTitle, eventDate) => {
+    global.showAlert({
+      type: 'error',
+      title: 'Отменить запись?',
+      message: `${eventTitle}\n${eventDate ? '📅 ' + eventDate + '\n' : ''}Вы уверены? Это действие нельзя отменить`,
+      confirmText: 'Да, отменить',
+      cancelText: 'Нет',
+      onConfirm: async () => {
+  safeHaptic('success');
+  await cancelBooking(bookingId, eventId);
+
+  if (global.showNotification) {
+    global.showNotification('error', 'Запись отменена', `${eventTitle}\nЧасы убраны из профиля`);
+  }
+
+  showCancelNotification(eventTitle);
+
+  // ✅ Обновляем профиль
+  if (global.refreshProfile) {
+    global.refreshProfile();
+  }
+},
+    });
   };
 
   const renderBooking = ({ item }) => {
@@ -71,24 +66,11 @@ export default function BookingsScreen() {
 
     const eventDate = new Date(event.event_date);
     const formattedDate = eventDate.toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
     });
 
-    const statusLabel =
-      item.status === 'registered'
-        ? 'Записан'
-        : item.status === 'attended'
-        ? 'Посетил'
-        : 'Отменено';
-    const statusColor =
-      item.status === 'registered'
-        ? colors.success
-        : item.status === 'attended'
-        ? colors.primary
-        : colors.error;
+    const statusLabel = item.status === 'registered' ? 'Записан' : item.status === 'attended' ? 'Посетил' : 'Отменено';
+    const statusColor = item.status === 'registered' ? colors.success : item.status === 'attended' ? colors.primary : colors.error;
 
     return (
       <View style={[styles.bookingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -98,29 +80,23 @@ export default function BookingsScreen() {
           </View>
           {item.status === 'registered' && (
             <TouchableOpacity
-              onPress={() => handleCancel(item.id, event.id, event.title)}
+              onPress={() => handleCancel(item.id, event.id, event.title, formattedDate)}
               style={styles.cancelButton}
             >
               <XCircle size={20} color={colors.error} />
             </TouchableOpacity>
           )}
         </View>
-
         <TouchableOpacity onPress={() => router.push(`/event/${event.id}`)}>
-          <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={2}>
-            {event.title}
-          </Text>
+          <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={2}>{event.title}</Text>
         </TouchableOpacity>
-
         <View style={styles.infoRow}>
           <MapPin size={14} color={colors.textSecondary} />
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>{event.city}</Text>
         </View>
         <View style={styles.infoRow}>
           <Clock size={14} color={colors.textSecondary} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            {formattedDate} · {event.duration_hours} ч
-          </Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>{formattedDate} · {event.duration_hours} ч</Text>
         </View>
       </View>
     );
@@ -130,11 +106,8 @@ export default function BookingsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Мои записи</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          {bookings.length} {getBookingWord(bookings.length)}
-        </Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{bookings.length} {getBookingWord(bookings.length)}</Text>
       </View>
-
       <FlatList
         data={bookings}
         renderItem={renderBooking}
@@ -143,15 +116,9 @@ export default function BookingsScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           loading ? (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
+            <View style={styles.loaderContainer}><ActivityIndicator size="large" color={colors.primary} /></View>
           ) : (
-            <EmptyState
-              icon={Calendar}
-              title="Нет записей"
-              message="Вы пока не записались ни на одно мероприятие"
-            />
+            <EmptyState icon={Calendar} title="Нет записей" message="Вы пока не записались ни на одно мероприятие" />
           )
         }
       />
@@ -169,78 +136,20 @@ function getBookingWord(count) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  bookingCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-  bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    padding: 4,
-  },
-  eventTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-    lineHeight: 21,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 13,
-  },
-  loaderContainer: {
-    paddingTop: 100,
-  },
-  loginButton: {
-    marginHorizontal: 20,
-    marginBottom: 40,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  headerTitle: { fontSize: 28, fontWeight: '800' },
+  headerSubtitle: { fontSize: 14, marginTop: 4 },
+  listContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  bookingCard: { borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1 },
+  bookingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  cancelButton: { padding: 4 },
+  eventTitle: { fontSize: 16, fontWeight: '600', marginBottom: 10, lineHeight: 21 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  infoText: { fontSize: 13 },
+  loaderContainer: { paddingTop: 100 },
+  loginButton: { marginHorizontal: 20, marginBottom: 40, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  loginButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });

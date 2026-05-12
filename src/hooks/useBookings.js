@@ -2,89 +2,48 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUserBookings, bookEvent, cancelBooking } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
-import { log } from '../utils/logger';
-
-const MODULE = 'USE_BOOKINGS';
-
-// Глобальный кеш
-let globalBookings = [];
-let globalUserId = null;
-let loadingPromise = null;
+import { useEventStore } from '../stores/eventStore';
 
 export function useBookings() {
-  const [bookings, setBookings] = useState(globalBookings);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  const userId = useAuthStore((state) => state.user?.id);
+  const user = useAuthStore((state) => state.user);
+  const userId = user?.id;
   const prevUserId = useRef(null);
   const mountedRef = useRef(true);
 
   const loadBookings = useCallback(async () => {
     if (!userId) {
-      globalBookings = [];
-      globalUserId = null;
-      if (mountedRef.current) setBookings([]);
-      return;
-    }
-
-    // Если уже загружены для этого пользователя — не грузим
-    if (globalUserId === userId && globalBookings.length >= 0) {
-      if (mountedRef.current) {
-        setBookings(globalBookings);
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Если уже идет загрузка — ждем её
-    if (loadingPromise) {
-      await loadingPromise;
-      if (mountedRef.current) {
-        setBookings(globalBookings);
-        setLoading(false);
-      }
-      return;
-    }
-
-    if (mountedRef.current) setLoading(true);
-
-    loadingPromise = (async () => {
-      try {
-        const data = await fetchUserBookings(userId);
-        globalBookings = data || [];
-        globalUserId = userId;
-      } catch (error) {
-        // оставляем старые данные
-      } finally {
-        loadingPromise = null;
-      }
-    })();
-
-    await loadingPromise;
-
-    if (mountedRef.current) {
-      setBookings(globalBookings);
+      setBookings([]);
       setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await fetchUserBookings(userId);
+      if (mountedRef.current) {
+        setBookings(data || []);
+      }
+    } catch (error) {
+      if (mountedRef.current) {
+        setBookings([]);
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [userId]);
 
   useEffect(() => {
     mountedRef.current = true;
     
-    // Загружаем ТОЛЬКО если userId реально изменился
     if (userId !== prevUserId.current) {
       prevUserId.current = userId;
-      
-      if (userId) {
-        loadBookings();
-      } else {
-        globalBookings = [];
-        globalUserId = null;
-        setBookings([]);
-        setLoading(false);
-      }
+      loadBookings();
     }
-    
+
     return () => {
       mountedRef.current = false;
     };
@@ -93,13 +52,19 @@ export function useBookings() {
   const handleBookEvent = async (eventId) => {
     if (!userId) return { success: false, message: 'Нужно войти' };
     const result = await bookEvent(userId, eventId);
-    if (result.success) await loadBookings();
+    if (result.success) {
+      // Мгновенно обновляем список
+      await loadBookings();
+    }
     return result;
   };
 
   const handleCancelBooking = async (bookingId, eventId) => {
     const success = await cancelBooking(bookingId, eventId);
-    if (success) await loadBookings();
+    if (success) {
+      // Мгновенно обновляем список
+      await loadBookings();
+    }
     return success;
   };
 

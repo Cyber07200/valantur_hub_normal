@@ -11,6 +11,9 @@ import EventCard from '../../src/components/EventCard';
 import EmptyState from '../../src/components/EmptyState';
 import { Search } from 'lucide-react-native';
 
+// ✅ Примерная высота одной карточки для getItemLayout
+const CARD_HEIGHT = 190;
+
 export default function EventsScreen() {
   const { colors } = useTheme();
   const events = useEventStore((state) => state.events);
@@ -21,22 +24,42 @@ export default function EventsScreen() {
   const loadEvents = useEventStore((state) => state.loadEvents);
 
   const searchTimer = useRef(null);
+  const initialLoadDone = useRef(false);
 
-  // ✅ Загружаем только ОДИН раз
+  // Загружаем только при первом рендере
   useEffect(() => {
-    if (!loaded) {
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
       loadEvents();
     }
-  }, [loaded, loadEvents]);
+  }, []);
 
+  // Поиск с задержкой
   const handleSearchChange = useCallback((text) => {
     setFilter('search', text);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => loadEvents(), 500);
+    searchTimer.current = setTimeout(() => {
+      loadEvents();
+    }, 500);
   }, [setFilter, loadEvents]);
 
+  // Pull to refresh
+  const handleRefresh = useCallback(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // ✅ Мемоизированный рендер карточки
   const renderEvent = useCallback(({ item }) => <EventCard event={item} />, []);
+  
+  // ✅ Ключ — строка для быстрого сравнения
   const keyExtractor = useCallback((item) => String(item.id), []);
+
+  // ✅ Оптимизация: getItemLayout для одинаковых карточек
+  const getItemLayout = useCallback((data, index) => ({
+    length: CARD_HEIGHT,
+    offset: CARD_HEIGHT * index,
+    index,
+  }), []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -60,20 +83,25 @@ export default function EventsScreen() {
         keyExtractor={keyExtractor}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        // ✅ Оптимизация производительности
         removeClippedSubviews={true}
-        maxToRenderPerBatch={8}
-        windowSize={5}
-        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={4}
+        initialNumToRender={6}
+        getItemLayout={getItemLayout}
+        updateCellsBatchingPeriod={50}
+        // ✅ Pull to refresh
         refreshControl={
           <RefreshControl
-            refreshing={loading && events.length > 0}
-            onRefresh={loadEvents}
+            refreshing={false}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
         }
+        // ✅ Пустой список
         ListEmptyComponent={
-          loading ? (
+          loading && events.length === 0 ? (
             <View style={styles.loader}>
               <ActivityIndicator size="large" color={colors.primary} />
             </View>

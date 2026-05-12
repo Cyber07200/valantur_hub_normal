@@ -1,7 +1,7 @@
 // src/stores/eventStore.js
 import { create } from 'zustand';
 import { fetchEvents } from '../services/supabase';
-import { log, logError, logStart, logEnd, startTimer, endTimer } from '../utils/logger';
+import { log, logError } from '../utils/logger';
 
 const MODULE = 'EVENT_STORE';
 
@@ -18,50 +18,32 @@ export const useEventStore = create((set, get) => ({
   events: [],
   loading: false,
   loaded: false,
+  error: null,
   filters: { ...defaultFilters },
 
-  // ✅ Установка фильтра + автозагрузка
   setFilter: (key, value) => {
-    log(MODULE, `Установлен фильтр: ${key} = ${value}`);
-    
     set((state) => ({
       filters: { ...state.filters, [key]: value },
     }));
-    
-    // ✅ Автоматически загружаем после смены фильтра
-    get().loadEvents();
   },
 
-  // ✅ Сброс фильтров + загрузка
   resetFilters: () => {
-    log(MODULE, 'Сброс всех фильтров');
     set({ filters: { ...defaultFilters } });
-    get().loadEvents();
   },
 
-  // ✅ Загрузка с защитой от повторов
   loadEvents: async () => {
     const state = get();
-    
-    if (state.loading) {
-      log(MODULE, '⚠️ Загрузка уже выполняется');
-      return;
-    }
+    if (state.loading) return;
 
-    logStart(MODULE, 'Начало загрузки мероприятий');
-    const timer = startTimer();
-    set({ loading: true });
+    set({ loading: true, error: null });
 
     try {
       const { filters } = get();
       const events = await fetchEvents(filters);
       set({ events, loading: false, loaded: true });
-      
-      const duration = endTimer(timer);
-      logEnd(MODULE, `Загружено ${events.length} событий`, duration);
     } catch (error) {
-      logError(MODULE, 'Ошибка в loadEvents', error);
-      set({ loading: false, loaded: true });
+      logError(MODULE, 'Ошибка загрузки', error);
+      set({ loading: false, loaded: true, error: error.message });
     }
   },
 }));

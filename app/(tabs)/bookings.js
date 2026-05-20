@@ -10,7 +10,6 @@ import { useBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/stores/authStore';
 import EmptyState from '../../src/components/EmptyState';
 import { safeHaptic } from '../../src/utils/platform';
-import { showCancelNotification } from '../../src/utils/notifications';
 
 export default function BookingsScreen() {
   const { colors } = useTheme();

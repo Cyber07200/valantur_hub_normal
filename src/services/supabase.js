@@ -1,12 +1,11 @@
 // src/services/supabase.js
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { log, logError, logEnd, startTimer, endTimer } from '../utils/logger';
 
-const MODULE = 'SUPABASE';
+const supabaseUrl = 'https://xbsbrfgaqdrwmsfiwheq.supabase.co';
+const supabaseAnonKey = 'sb_publishable_YQ93mYxEABkCIFlfnp8g-g_R88w97qJ';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+console.log('[SUPABASE] Init');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -18,138 +17,62 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // ============================================
-// УМНЫЙ КЕШ С TTL
+// ЗАГРУЗКА МЕРОПРИЯТИЙ (список)
 // ============================================
-const cache = new Map();
-const CACHE_TTL = {
-  events: 30000,    // 30 секунд
-  event: 60000,     // 1 минута
-  bookings: 15000,  // 15 секунд
-  profile: 30000,   // 30 секунд
-  leaderboard: 60000, // 1 минута
-};
+export async function fetchEvents(filters = {}, page = 1, pageSize = 10) {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-function getCache(key) {
-  const item = cache.get(key);
-  if (!item) return null;
-  if (Date.now() - item.time > (CACHE_TTL[key.split(':')[0]] || 15000)) {
-    cache.delete(key);
-    return null;
-  }
-  return item.data;
-}
+  console.log(`[FETCH] page=${page}, range=${from}-${to}`);
 
-function setCache(key, data) {
-  cache.set(key, { data, time: Date.now() });
-}
-
-function clearCache(pattern) {
-  for (const key of cache.keys()) {
-    if (key.startsWith(pattern)) cache.delete(key);
-  }
-}
-
-// ============================================
-// ДЕДУПЛИКАЦИЯ ЗАПРОСОВ
-// ============================================
-const _inflight = new Map();
-
-function dedupe(key, fn) {
-  if (_inflight.has(key)) {
-    return _inflight.get(key);
-  }
-  
-  const promise = fn()
-    .then(result => { _inflight.delete(key); return result; })
-    .catch(error => { _inflight.delete(key); throw error; });
-  
-  _inflight.set(key, promise);
-  return promise;
-}
-
-// ============================================
-// ПРОВЕРКА СОЕДИНЕНИЯ
-// ============================================
-export async function checkConnection() {
   try {
-    const start = Date.now();
-    const { error } = await supabase.from('events').select('id').limit(1);
-    if (error) return false;
-    log(MODULE, `БД доступна (${Date.now() - start}мс)`);
-    return true;
-  } catch { return false; }
-}
+    let query = supabase
+      .from('events')
+      .select('id, title, category, city, event_date, duration_hours, max_volunteers, current_volunteers, status', { count: 'exact' })
+      .eq('status', 'active')
+      .order('event_date', { ascending: true })
+      .range(from, to);
 
-checkConnection();
+    if (filters.search) query = query.ilike('title', `%${filters.search}%`);
+    if (filters.category) query = query.eq('category', filters.category);
 
-// ============================================
-// ЗАГРУЗКА МЕРОПРИЯТИЙ (с кешем)
-// ============================================
-export async function fetchEvents(filters) {
-  const cacheKey = `events:${JSON.stringify(filters)}`;
-  const cached = getCache(cacheKey);
-  if (cached) {
-    log(MODULE, '📦 Кеш мероприятий');
-    return cached;
-  }
+    const { data, error, count } = await query;
 
-  const timer = startTimer();
-
-  return dedupe(cacheKey, async () => {
-    try {
-      let query = supabase
-        .from('events')
-        .select('id, title, description, category, city, event_date, duration_hours, max_volunteers, current_volunteers, status')
-        .eq('status', 'active')
-        .limit(50);
-
-      if (filters.search) query = query.ilike('title', `%${filters.search}%`);
-      if (filters.category) query = query.eq('category', filters.category);
-      if (filters.city) query = query.eq('city', filters.city);
-      if (filters.dateFrom) query = query.gte('event_date', filters.dateFrom);
-      if (filters.hoursMin) query = query.gte('duration_hours', filters.hoursMin);
-      query = query.order('event_date', { ascending: true });
-
-      const { data, error } = await query;
-
-      if (error) { logError(MODULE, 'Ошибка fetchEvents', error); return []; }
-
-      const result = data || [];
-      setCache(cacheKey, result);
-      logEnd(MODULE, `Загружено ${result.length} мероприятий`, endTimer(timer));
-      return result;
-    } catch (error) {
-      logError(MODULE, 'Ошибка fetchEvents', error);
-      return [];
+    if (error) {
+      console.log('[FETCH] Error:', error.message);
+      return { events: [], total: 0, hasMore: false };
     }
-  });
+
+    const hasMore = from + data.length < count;
+    console.log(`[FETCH] received ${data.length}, total=${count}, hasMore=${hasMore}`);
+
+    return { events: data || [], total: count, hasMore };
+  } catch (e) {
+    console.log('[FETCH] Exception:', e.message);
+    return { events: [], total: 0, hasMore: false };
+  }
 }
 
 // ============================================
-// ЗАГРУЗКА ОДНОГО МЕРОПРИЯТИЯ (с кешем)
+// ЗАГРУЗКА ОДНОГО МЕРОПРИЯТИЯ (полные данные)
 // ============================================
 export async function fetchEventById(eventId) {
   if (!eventId) return null;
-  
-  const cacheKey = `event:${eventId}`;
-  const cached = getCache(cacheKey);
-  if (cached) {
-    log(MODULE, '📦 Кеш мероприятия');
-    return cached;
-  }
-
-  return dedupe(cacheKey, async () => {
+  try {
     const { data, error } = await supabase
       .from('events')
       .select('*')
       .eq('id', eventId)
       .single();
-
-    if (error) { logError(MODULE, `Ошибка event/${eventId}`, error); return null; }
-    
-    setCache(cacheKey, data);
+    if (error) {
+      console.log('[EVENT] Error:', error.message);
+      return null;
+    }
     return data;
-  });
+  } catch (e) {
+    console.log('[EVENT] Exception:', e.message);
+    return null;
+  }
 }
 
 // ============================================
@@ -166,27 +89,14 @@ export async function bookEvent(userId, eventId) {
 
     if (existing) return { success: false, message: 'Вы уже записаны' };
 
-    const { error: bookingError } = await supabase
+    const { error } = await supabase
       .from('bookings')
       .insert({ user_id: userId, event_id: eventId });
 
-    if (bookingError) return { success: false, message: 'Не удалось' };
+    if (error) return { success: false, message: error.message };
 
-    // Параллельные запросы для скорости
-    await Promise.all([
-      supabase.rpc('increment_volunteers', { event_id_param: eventId }),
-      supabase.rpc('add_hours_to_user', { user_id_param: userId, event_id_param: eventId }),
-    ]);
-
-    // Очищаем кеш
-    clearCache('events');
-    clearCache(`event:${eventId}`);
-    clearCache(`bookings:${userId}`);
-    clearCache('leaderboard');
-    clearCache(`profile:${userId}`);
-
-    return { success: true, message: 'Вы записаны! Часы начислены!' };
-  } catch (error) {
+    return { success: true, message: 'Вы записаны!' };
+  } catch (e) {
     return { success: false, message: 'Ошибка соединения' };
   }
 }
@@ -196,128 +106,83 @@ export async function bookEvent(userId, eventId) {
 // ============================================
 export async function cancelBooking(bookingId, eventId) {
   try {
-    const { data: booking } = await supabase
-      .from('bookings')
-      .select('user_id, event_id')
-      .eq('id', bookingId)
-      .single();
-
     const { error } = await supabase
       .from('bookings')
       .update({ status: 'cancelled' })
       .eq('id', bookingId);
-
-    if (error) return false;
-
-    await Promise.all([
-      supabase.rpc('decrement_volunteers', { event_id_param: eventId }),
-      booking?.user_id ? supabase.rpc('remove_hours_from_user', { user_id_param: booking.user_id, event_id_param: booking.event_id }) : Promise.resolve(),
-    ]);
-
-    clearCache('events');
-    clearCache(`event:${eventId}`);
-    clearCache(`bookings:${booking?.user_id}`);
-    clearCache('leaderboard');
-    clearCache(`profile:${booking?.user_id}`);
-
-    return true;
-  } catch { return false; }
+    return !error;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ============================================
-// ЗАГРУЗКА БРОНИРОВАНИЙ (с кешем)
+// БРОНИРОВАНИЯ
 // ============================================
 export async function fetchUserBookings(userId) {
   if (!userId) return [];
-  
-  const cacheKey = `bookings:${userId}`;
-  const cached = getCache(cacheKey);
-  if (cached) {
-    log(MODULE, '📦 Кеш бронирований');
-    return cached;
-  }
-
-  return dedupe(cacheKey, async () => {
+  try {
     const { data, error } = await supabase
       .from('bookings')
-      .select(`id, user_id, event_id, status, registered_at, event:events(id, title, category, city, event_date, duration_hours)`)
+      .select('id, user_id, event_id, status, registered_at, event:events(*)')
       .eq('user_id', userId)
       .neq('status', 'cancelled')
       .order('registered_at', { ascending: false })
-      .limit(30);
-
+      .limit(20);
     if (error) return [];
-    
-    const result = data || [];
-    setCache(cacheKey, result);
-    return result;
-  });
+    return data || [];
+  } catch (e) {
+    return [];
+  }
 }
 
 // ============================================
-// ЗАГРУЗКА ПРОФИЛЯ (с кешем)
+// ПРОФИЛЬ
 // ============================================
 export async function fetchProfile(userId) {
   if (!userId) return null;
-  
-  const cacheKey = `profile:${userId}`;
-  const cached = getCache(cacheKey);
-  if (cached) {
-    log(MODULE, '📦 Кеш профиля');
-    return cached;
-  }
-
-  return dedupe(cacheKey, async () => {
+  try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-
     if (error) return null;
-    
-    setCache(cacheKey, data);
     return data;
-  });
+  } catch (e) {
+    return null;
+  }
 }
 
 // ============================================
-// ЗАГРУЗКА ЛИДЕРБОРДА (с кешем)
+// ЛИДЕРБОРД
 // ============================================
 export async function fetchLeaderboard() {
-  const cacheKey = 'leaderboard';
-  const cached = getCache(cacheKey);
-  if (cached) {
-    log(MODULE, '📦 Кеш лидерборда');
-    return cached;
-  }
-
-  return dedupe(cacheKey, async () => {
+  try {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, nickname, avatar_url, total_hours')
       .order('total_hours', { ascending: false })
-      .limit(50);
-
+      .limit(30);
     if (error) return [];
-    
-    const result = data || [];
-    setCache(cacheKey, result);
-    return result;
-  });
+    return data || [];
+  } catch (e) {
+    return [];
+  }
 }
 
 // ============================================
-// ПРОВЕРКА НИКНЕЙМА
+// НИКНЕЙМ
 // ============================================
 export async function checkNickname(nickname, userId = null) {
   try {
-    let query = supabase.from('profiles').select('id').eq('nickname', nickname);
-    if (userId) query = query.neq('id', userId);
-    const { data, error } = await query;
-    if (error) return false;
-    return data.length === 0;
-  } catch { return false; }
+    let q = supabase.from('profiles').select('id').eq('nickname', nickname);
+    if (userId) q = q.neq('id', userId);
+    const { data } = await q;
+    return !data || data.length === 0;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ============================================
@@ -325,51 +190,27 @@ export async function checkNickname(nickname, userId = null) {
 // ============================================
 export async function updateProfile(userId, updates) {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single();
-
+    const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
     if (error) return { success: false, message: error.message };
-    
-    clearCache(`profile:${userId}`);
-    clearCache('leaderboard');
-    return { success: true, data };
-  } catch { return { success: false, message: 'Ошибка соединения' }; }
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: 'Ошибка' };
+  }
 }
 
 // ============================================
-// ЗАГРУЗКА АВАТАРА
+// АВАТАР
 // ============================================
 export async function uploadAvatar(userId, uri) {
   try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const fileExt = uri.split('.').pop() || 'jpg';
-    const fileName = `${userId}_${Date.now()}.${fileExt}`;
-
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, blob, {
-        contentType: `image/${fileExt === 'png' ? 'png' : 'jpeg'}`,
-        cacheControl: '3600',
-        upsert: true,
-      });
-
+    const r = await fetch(uri);
+    const b = await r.blob();
+    const name = `${userId}_${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('avatars').upload(name, b, { contentType: 'image/jpeg', upsert: true });
     if (error) return uri;
-    
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    clearCache(`profile:${userId}`);
-    return urlData.publicUrl;
-  } catch { return uri; }
-}
-
-// ============================================
-// ОЧИСТКА ВСЕГО КЕША (вызывать при выходе)
-// ============================================
-export function clearAllCache() {
-  cache.clear();
-  _inflight.clear();
+    const { data } = supabase.storage.from('avatars').getPublicUrl(name);
+    return data.publicUrl;
+  } catch (e) {
+    return uri;
+  }
 }

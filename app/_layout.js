@@ -7,12 +7,11 @@ import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { useAuthStore } from '../src/stores/authStore';
 import { useNotification } from '../src/components/InAppNotification';
 import { useCustomAlert } from '../src/components/CustomAlert';
-import { setupNotifications } from '../src/utils/notifications';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // ============================================
-// КРАСИВЫЙ СПЛЭШ-ЭКРАН
+// СПЛЭШ-ЭКРАН
 // ============================================
 function SplashScreen() {
   const bgScale = useRef(new Animated.Value(1)).current;
@@ -66,16 +65,12 @@ function SplashScreen() {
     ]).start();
 
     Animated.timing(progressWidth, {
-      toValue: 1,
-      duration: 2800,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
+      toValue: 1, duration: 2800, easing: Easing.inOut(Easing.ease), useNativeDriver: false,
     }).start();
   }, []);
 
   const progressWidthInterpolate = progressWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    inputRange: [0, 1], outputRange: ['0%', '100%'],
   });
 
   return (
@@ -88,32 +83,23 @@ function SplashScreen() {
 
       <View style={splashStyles.content}>
         <Animated.View style={[splashStyles.logoContainer, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
-          <View style={splashStyles.logoInner}>
-            <Text style={splashStyles.logoEmoji}>🤝</Text>
-          </View>
+          <View style={splashStyles.logoInner}><Text style={splashStyles.logoEmoji}>🤝</Text></View>
           <PulsingRing />
         </Animated.View>
-
         <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleTranslateY }] }}>
           <Text style={splashStyles.title}>Волонтер Хаб</Text>
         </Animated.View>
-
         <Animated.View style={{ opacity: subtitleOpacity, transform: [{ translateY: subtitleTranslateY }] }}>
           <Text style={splashStyles.subtitle}>Меняем мир вместе</Text>
         </Animated.View>
-
         <View style={splashStyles.progressContainer}>
           <View style={splashStyles.progressTrack}>
             <Animated.View style={[splashStyles.progressFill, { width: progressWidthInterpolate }]} />
           </View>
         </View>
-
         <Text style={splashStyles.loadingText}>Загрузка...</Text>
       </View>
-
-      <View style={splashStyles.bottomWave}>
-        <View style={splashStyles.waveShape} />
-      </View>
+      <View style={splashStyles.bottomWave}><View style={splashStyles.waveShape} /></View>
     </View>
   );
 }
@@ -160,11 +146,7 @@ function RootLayoutInner() {
   }, [showNotification, showAlert]);
 
   useEffect(() => {
-    setupNotifications();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 3500);
+    const timer = setTimeout(() => setShowSplash(false), 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -188,37 +170,9 @@ function RootLayoutInner() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="event/[id]"
-          options={{
-            headerShown: true,
-            headerTitle: 'Мероприятие',
-            headerBackTitle: 'Назад',
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
-            animation: 'none',
-          }}
-        />
-        <Stack.Screen
-          name="auth/login"
-          options={{
-            headerShown: true,
-            headerTitle: 'Вход',
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="auth/register"
-          options={{
-            headerShown: true,
-            headerTitle: 'Регистрация',
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
-            presentation: 'modal',
-          }}
-        />
+        <Stack.Screen name="event/[id]" options={{ headerShown: false, animation: 'none' }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: true, headerTitle: 'Вход', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
+        <Stack.Screen name="auth/register" options={{ headerShown: true, headerTitle: 'Регистрация', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
       </Stack>
       {NotificationComponent}
       {AlertComponent}

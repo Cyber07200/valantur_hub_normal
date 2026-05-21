@@ -20,35 +20,42 @@ export const useAuthStore = create((set) => ({
   },
 
   signIn: async (email, password) => {
+    console.log('[AUTH] Вход:', email);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
     if (error) {
+      console.log('[AUTH] Ошибка входа:', error.message);
       if (error.message.includes('Invalid login')) {
         return { success: false, message: 'Неверный email или пароль' };
       }
       if (error.message.includes('Email not confirmed')) {
-        return { success: false, message: 'Email не подтверждён. Проверьте почту или отключите подтверждение в Supabase.' };
+        return { success: false, message: 'Email не подтверждён. Отключите подтверждение в Supabase.' };
       }
       return { success: false, message: error.message };
     }
+    
+    console.log('[AUTH] Вход успешен:', data.user?.email);
     set({ user: data.user, session: data.session });
     return { success: true };
   },
 
   signUp: async (email, password, fullName, nickname) => {
+    console.log('[AUTH] Регистрация:', email);
     const { data, error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName, nickname: nickname } }
+      email,
+      password,
+      options: { data: { full_name: fullName, nickname: nickname } },
     });
+    
     if (error) {
+      console.log('[AUTH] Ошибка регистрации:', error.message);
       if (error.message.includes('already registered')) {
         return { success: false, message: 'Пользователь с таким email уже существует' };
       }
       return { success: false, message: error.message };
     }
-    // Если подтверждение email отключено, пользователь сразу активен
-    if (data.user?.identities?.length === 0) {
-      return { success: false, message: 'Регистрация не удалась' };
-    }
+    
+    console.log('[AUTH] Регистрация успешна');
     return { success: true, message: 'Регистрация успешна! Теперь войдите.' };
   },
 

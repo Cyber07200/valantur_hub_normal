@@ -43,18 +43,14 @@ export default function EventsScreen() {
   const handleRefresh = useCallback(() => loadEvents(), [loadEvents]);
 
   const handleLoadMore = useCallback(() => {
-    if (!loading && hasMore && events.length > 0) {
-      loadMore();
-    }
+    if (!loading && hasMore && events.length > 0) loadMore();
   }, [loading, hasMore, events.length, loadMore]);
 
   const renderEvent = useCallback(({ item }) => <EventCard event={item} />, []);
   const keyExtractor = useCallback((item) => String(item.id), []);
 
   const getItemLayout = useCallback((data, index) => ({
-    length: CARD_HEIGHT,
-    offset: CARD_HEIGHT * index,
-    index,
+    length: CARD_HEIGHT, offset: CARD_HEIGHT * index, index,
   }), []);
 
   return (
@@ -97,7 +93,7 @@ export default function EventsScreen() {
             </View>
           ) : !hasMore && events.length > 0 ? (
             <Text style={[styles.footerText, { color: colors.textSecondary, textAlign: 'center', padding: 16 }]}>
-              ✅ Все мероприятия загружены ({events.length})
+              Все мероприятия загружены ({events.length})
             </Text>
           ) : hasMore && events.length > 0 ? (
             <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
@@ -110,9 +106,7 @@ export default function EventsScreen() {
         }
         ListEmptyComponent={
           loading && events.length === 0 ? (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
+            <View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>
           ) : (
             <EmptyState icon={Search} title="Мероприятий не найдено" message="Попробуйте изменить фильтры" />
           )
@@ -133,9 +127,5 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: 20, paddingBottom: 100 },
   footerLoader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 16, gap: 8 },
   footerText: { fontSize: 13 },
-  loadMoreButton: {
-    alignItems: 'center',
-    padding: 12,
-    marginTop: 8,
-  },
+  loadMoreButton: { alignItems: 'center', padding: 12, marginTop: 8 },
 });

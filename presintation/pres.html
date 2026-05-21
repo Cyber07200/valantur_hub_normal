@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Волонтер Хаб — Презентация</title>
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --bg: #0F0F1A;
+            --surface: #1A1A2E;
+            --text: #F0F0F5;
+            --text-secondary: #9CA3AF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Контейнер слайдов */
+        .slides-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            padding: 60px;
+            background: var(--bg);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: all;
+        }
+
+        /* Анимации фона */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+        }
+        .bg-orb:nth-child(1) { width: 400px; height: 400px; background: var(--primary); top: -100px; right: -100px; animation-delay: 0s; }
+        .bg-orb:nth-child(2) { width: 300px; height: 300px; background: #8B5CF6; bottom: -80px; left: -80px; animation-delay: -4s; }
+        .bg-orb:nth-child(3) { width: 200px; height: 200px; background: #EC4899; top: 50%; left: 50%; animation-delay: -2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(10px, -10px) scale(1.05); }
+        }
+
+        /* Титульный слайд */
+        .title-slide h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titlePulse 3s ease-in-out infinite;
+            margin-bottom: 20px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .author {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            z-index: 1;
+            text-align: center;
+            letter-spacing: 2px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .subtitle-line {
+            width: 120px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+            margin: 20px auto;
+            animation: widenLine 1.5s ease-out;
+        }
+
+        @keyframes widenLine {
+            from { width: 0; }
+            to { width: 120px; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Заголовки слайдов */
+        h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            z-index: 1;
+            text-align: center;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            color: var(--text);
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        /* Карточки */
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 30px;
+            width: 280px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .card-icon { font-size: 3rem; margin-bottom: 15px; }
+        .card h4 { font-size: 1.3rem; margin-bottom: 10px; color: var(--text); }
+        .card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+
+        /* Таблица сравнения */
+        .compare-table {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            z-index: 1;
+            width: 80%;
+            max-width: 900px;
+        }
+        .compare-table div {
+            padding: 16px 20px;
+            background: var(--surface);
+            text-align: center;
+        }
+        .compare-table .header-cell {
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .compare-table .label-cell {
+            text-align: left;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .check { color: var(--success); font-size: 1.5rem; }
+        .cross { color: var(--error); font-size: 1.5rem; }
+        .highlight { color: var(--warning); font-weight: 700; }
+
+        /* Технические блоки */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            z-index: 1;
+            width: 85%;
+            max-width: 1000px;
+        }
+        .tech-item {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .tech-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        .tech-item .emoji { font-size: 2.5rem; margin-bottom: 10px; }
+        .tech-item .name { font-weight: 700; color: var(--text); margin-bottom: 5px; }
+        .tech-item .desc { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Идеи */
+        .ideas-list {
+            text-align: left;
+            z-index: 1;
+            max-width: 700px;
+        }
+        .ideas-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ideas-list li::before {
+            content: '💡';
+            font-size: 1.5rem;
+        }
+
+        /* Навигация */
+        .nav {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        .nav button {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav button:hover {
+            border-color: var(--primary);
+            background: var(--primary-dark);
+        }
+        .nav button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .nav .dots {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 20px;
+        }
+        .nav .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+        .nav .dot.active {
+            background: var(--primary);
+            width: 25px;
+        }
+
+        /* Счетчик слайда */
+        .counter {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            .slide { padding: 30px; }
+            h1 { font-size: 3rem !important; }
+            h2 { font-size: 2rem !important; }
+            .tech-grid { grid-template-columns: repeat(2, 1fr); }
+            .compare-table { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="slides-container">
+
+    <!-- Слайд 1: Титульный -->
+    <div class="slide title-slide active" data-index="0">
+        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+        <h1>Волонтер Хаб</h1>
+        <div class="subtitle-line"></div>
+        <p style="font-size:1.4rem; color: var(--text-secondary); z-index:1; margin-bottom:8px;">Кроссплатформенное приложение для волонтеров</p>
+        <p class="author">Абросимов Максим Романович</p>
+    </div>
+
+    <!-- Слайд 2: О проекте -->
+    <div class="slide" data-index="1">
+        <div class="bg-orb"></div><div class="bg-orb"></div>
+        <h2>О проекте</h2>
+        <div class="cards">
+            <div class="card"><div class="card-icon">🎯</div><h4>Цель</h4><p>Создать единую платформу для поиска волонтерских мероприятий и учета часов</p></div>
+            <div class="card"><div class="card-icon">📱</div><h4>Платформы</h4><p>iOS, Android, Web, Desktop — единая кодовая база на React Native</p></div>
+            <div class="card"><div class="card-icon">⚡</div><h4>Стек</h4><p>Expo SDK, Supabase, Zustand, Reanimated — современные технологии</p></div>
+        </div>
+    </div>
+
+    <!-- Слайд 3: Анализ конкурентов -->
+    <div class="slide" data-index="2">
+        <div class="bg-orb"></div>
+        <h2>Анализ конкурентов</h2>
+        <div class="compare-table">
+            <div class="header-cell">Функция</div><div class="header-cell">Волонтер Хаб</div><div class="header-cell">Добро.ру</div><div class="header-cell">VolunteerMatch</div>
+            <div class="label-cell">Поиск мероприятий</div><div class="check">✅</div><div class="check">✅</div><div class="check">✅</div>
+            <div class="label-cell">Учет часов</div><div class="check">✅</div><div class="cross">❌</div><div class="check">✅</div>
+            <div class="label-cell">Лидерборд</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
+            <div class="label-cell">Кроссплатформа</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
+            <div class="label-cell">Темная тема</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
+            <div class="label-cell">Анимации UI</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
+        </div>
+    </div>
+
+    <!-- Слайд 4: Дизайн -->
+    <div class="slide" data-index="3">
+        <div class="bg-orb"></div><div class="bg-orb"></div>
+        <h2>Дизайн и UI/UX</h2>
+        <div class="cards">
+            <div class="card"><div class="card-icon">🎨</div><h4>Современный минимализм</h4><p>Индиго-фиолетовая палитра, скругленные углы, мягкие тени</p></div>
+            <div class="card"><div class="card-icon">🌓</div><h4>Темная/светлая тема</h4><p>Автоматическое переключение по системным настройкам</p></div>
+            <div class="card"><div class="card-icon">✨</div><h4>Желейные анимации</h4><p>Reanimated + пружинные эффекты для карточек и переходов</p></div>
+        </div>
+    </div>
+
+    <!-- Слайд 5: Техническая архитектура -->
+    <div class="slide" data-index="4">
+        <h2>Техническая архитектура</h2>
+        <div class="tech-grid">
+            <div class="tech-item"><div class="emoji">⚛️</div><div class="name">React Native</div><div class="desc">Кроссплатформенный UI</div></div>
+            <div class="tech-item"><div class="emoji">📦</div><div class="name">Expo SDK</div><div class="desc">Сборка и нативные API</div></div>
+            <div class="tech-item"><div class="emoji">🗄️</div><div class="name">Supabase</div><div class="desc">PostgreSQL + Auth</div></div>
+            <div class="tech-item"><div class="emoji">🔄</div><div class="name">Expo Router</div><div class="desc">Файловая навигация</div></div>
+            <div class="tech-item"><div class="emoji">🏪</div><div class="name">Zustand</div><div class="desc">State management</div></div>
+            <div class="tech-item"><div class="emoji">🎬</div><div class="name">Reanimated</div><div class="desc">Нативные анимации</div></div>
+            <div class="tech-item"><div class="emoji">🔔</div><div class="name">Haptics</div><div class="desc">Тактильные отклики</div></div>
+            <div class="tech-item"><div class="emoji">📊</div><div class="name">Пагинация</div><div class="desc">Чанки по 10 событий</div></div>
+        </div>
+    </div>
+
+    <!-- Слайд 6: База данных -->
+    <div class="slide" data-index="5">
+        <div class="bg-orb"></div>
+        <h2>Структура базы данных</h2>
+        <div class="cards">
+            <div class="card"><div class="card-icon">📋</div><h4>events</h4><p>Мероприятия: название, категория, город, дата, часы, места</p></div>
+            <div class="card"><div class="card-icon">👤</div><h4>profiles</h4><p>Профили: имя, никнейм, телефон, био, аватар, total_hours</p></div>
+            <div class="card"><div class="card-icon">📝</div><h4>bookings</h4><p>Записи: связь user-event, статус, время записи</p></div>
+        </div>
+        <p style="margin-top:30px; color:var(--text-secondary); z-index:1;">RLS политики, индексы, хранимые функции для подсчета часов</p>
+    </div>
+
+    <!-- Слайд 7: Функционал -->
+    <div class="slide" data-index="6">
+        <div class="bg-orb"></div><div class="bg-orb"></div>
+        <h2>Ключевой функционал</h2>
+        <div class="cards">
+            <div class="card"><div class="card-icon">🔍</div><h4>Поиск и фильтры</h4><p>По названию, категории, городу, дате с сортировкой</p></div>
+            <div class="card"><div class="card-icon">📅</div><h4>Мои записи</h4><p>Отслеживание статуса, отмена, начисление часов</p></div>
+            <div class="card"><div class="card-icon">🏆</div><h4>Лидерборд</h4><p>Таблица лидеров по часам с медалями и рейтингом</p></div>
+        </div>
+    </div>
+
+    <!-- Слайд 8: Особенности -->
+    <div class="slide" data-index="7">
+        <div class="bg-orb"></div>
+        <h2>Уникальные особенности</h2>
+        <div class="cards">
+            <div class="card"><div class="card-icon">🫧</div><h4>Желейный UI</h4><p>Пружинные анимации таб-бара, "влетание" в ивенты</p></div>
+            <div class="card"><div class="card-icon">📳</div><h4>Haptic Feedback</h4><p>Тактильные отклики на нажатия (iOS/Android)</p></div>
+            <div class="card"><div class="card-icon">🎯</div><h4>Умный кеш</h4><p>Мгновенная загрузка повторных просмотров</p></div>
+        </div>
+    </div>
+
+    <!-- Слайд 9: Идеи развития -->
+    <div class="slide" data-index="8">
+        <div class="bg-orb"></div><div class="bg-orb"></div>
+        <h2>Идеи для развития</h2>
+        <ul class="ideas-list">
+            <li>Система достижений и бейджей для волонтеров</li>
+            <li>Чат между участниками мероприятия</li>
+            <li>Интеграция с картами для построения маршрутов</li>
+            <li>Push-уведомления о новых мероприятиях поблизости</li>
+            <li>Геймификация: еженедельные челленджи и награды</li>
+            <li>Веб-версия с PWA для десктопа</li>
+        </ul>
+    </div>
+
+    <!-- Слайд 10: Спасибо -->
+    <div class="slide title-slide" data-index="9">
+        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+        <h1>Спасибо!</h1>
+        <div class="subtitle-line"></div>
+        <p style="font-size:1.4rem; color: var(--text-secondary); z-index:1; margin-bottom:8px;">Волонтер Хаб — меняем мир вместе</p>
+        <p class="author">Абросимов Максим Романович</p>
+        <p style="color: var(--text-secondary); z-index:1; margin-top:20px;">2026</p>
+    </div>
+
+</div>
+
+<!-- Навигация -->
+<div class="counter" id="counter">1 / 10</div>
+<div class="nav">
+    <button onclick="prevSlide()" id="prevBtn">◀</button>
+    <div class="dots" id="dots"></div>
+    <button onclick="nextSlide()" id="nextBtn">▶</button>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    // Создаем точки
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+    }
+
+    function updateUI() {
+        slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+        counter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateUI();
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) goToSlide(currentSlide - 1);
+    }
+
+    // Клавиатура
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Свайпы
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) nextSlide();
+            else prevSlide();
+        }
+    });
+
+    updateUI();
+</script>
+
+</body>
+</html>

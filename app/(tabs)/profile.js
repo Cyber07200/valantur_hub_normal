@@ -1,7 +1,7 @@
 // app/(tabs)/profile.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
   TextInput, Image, ActivityIndicator, Modal, FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -14,7 +14,7 @@ import { fetchProfile, updateProfile, uploadAvatar, checkNickname, fetchLeaderbo
 import { safeHaptic } from '../../src/utils/platform';
 
 export default function ProfileScreen() {
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark } = useTheme();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
@@ -227,7 +227,6 @@ export default function ProfileScreen() {
               <View style={styles.stat}><Clock size={20} color={colors.success} /><Text style={[styles.statNum, { color: colors.text }]}>{bookings?.length || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>записей</Text></View>
             </View>
 
-            {/* Кнопка Лидеры */}
             <TouchableOpacity
               style={[styles.leaderboardBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={handleOpenLeaderboard}
@@ -247,10 +246,12 @@ export default function ProfileScreen() {
           </>
         )}
 
+        {/* Настройки (без Switch, только индикатор темы) */}
         <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.settingRow}>
-            <Moon size={20} color={colors.text} /><Text style={[styles.settingText, { color: colors.text }]}>Тёмная тема</Text>
-            <Switch value={isDark} onValueChange={toggleTheme} trackColor={{ false: colors.border, true: colors.primaryLight }} thumbColor={isDark ? colors.primary : '#F4F4F4'} />
+            <Moon size={20} color={colors.text} />
+            <Text style={[styles.settingText, { color: colors.text }]}>Тёмная тема</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{isDark ? '🌙 Включена' : '☀️ Выключена'}</Text>
           </View>
         </View>
 
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
   notAuth: { alignItems: 'center', paddingTop: 60 },
   avatarPlaceholder: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   notAuthTitle: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
-  loginBtn: { width: '100%', maxWidth: 380, paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  loginBtn: { width: '100%', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
   loginBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
 });
 

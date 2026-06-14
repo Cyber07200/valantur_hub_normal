@@ -28,6 +28,13 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e0a9bb98-63d0-4c5c-bcb6-c0982c8b18a8"
+      }
+    },
+    "owner": "mix_london77"
   }
 }

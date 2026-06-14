@@ -17,24 +17,50 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 // ============================================
-// ЗАГРУЗКА МЕРОПРИЯТИЙ (список)
+// ЗАГРУЗКА МЕРОПРИЯТИЙ (пагинация + все фильтры)
 // ============================================
 export async function fetchEvents(filters = {}, page = 1, pageSize = 10) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  console.log(`[FETCH] page=${page}, range=${from}-${to}`);
+  console.log(`[FETCH] page=${page}, range=${from}-${to}, filters:`, filters);
 
   try {
     let query = supabase
       .from('events')
       .select('id, title, category, city, event_date, duration_hours, max_volunteers, current_volunteers, status', { count: 'exact' })
       .eq('status', 'active')
-      .order('event_date', { ascending: true })
       .range(from, to);
 
+    // Поиск по названию
     if (filters.search) query = query.ilike('title', `%${filters.search}%`);
+
+    // Фильтр по категории
     if (filters.category) query = query.eq('category', filters.category);
+
+    // Фильтр по городу
+    if (filters.city) query = query.ilike('city', `%${filters.city}%`);
+
+    // Минимальное количество часов
+    if (filters.hoursMin) query = query.gte('duration_hours', filters.hoursMin);
+
+    // Сортировка
+    switch (filters.sortBy) {
+      case 'date_asc':
+        query = query.order('event_date', { ascending: true });
+        break;
+      case 'date_desc':
+        query = query.order('event_date', { ascending: false });
+        break;
+      case 'hours_asc':
+        query = query.order('duration_hours', { ascending: true });
+        break;
+      case 'hours_desc':
+        query = query.order('duration_hours', { ascending: false });
+        break;
+      default:
+        query = query.order('event_date', { ascending: true });
+    }
 
     const { data, error, count } = await query;
 
@@ -54,7 +80,7 @@ export async function fetchEvents(filters = {}, page = 1, pageSize = 10) {
 }
 
 // ============================================
-// ЗАГРУЗКА ОДНОГО МЕРОПРИЯТИЯ (полные данные)
+// ЗАГРУЗКА ОДНОГО МЕРОПРИЯТИЯ
 // ============================================
 export async function fetchEventById(eventId) {
   if (!eventId) return null;
@@ -76,7 +102,7 @@ export async function fetchEventById(eventId) {
 }
 
 // ============================================
-// ЗАПИСЬ НА МЕРОПРИЯТИЕ
+// ЗАПИСЬ НА МЕРОПРИЯТИЕ (с мгновенным начислением часов)
 // ============================================
 export async function bookEvent(userId, eventId) {
   try {
@@ -95,7 +121,11 @@ export async function bookEvent(userId, eventId) {
 
     if (error) return { success: false, message: error.message };
 
-    return { success: true, message: 'Вы записаны!' };
+    // Мгновенно обновляем счётчики и часы
+    await supabase.rpc('increment_volunteers', { event_id_param: eventId });
+    await supabase.rpc('add_hours_to_user', { user_id_param: userId, event_id_param: eventId });
+
+    return { success: true, message: 'Вы записаны! Часы начислены!' };
   } catch (e) {
     return { success: false, message: 'Ошибка соединения' };
   }
@@ -106,18 +136,35 @@ export async function bookEvent(userId, eventId) {
 // ============================================
 export async function cancelBooking(bookingId, eventId) {
   try {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('user_id')
+      .eq('id', bookingId)
+      .single();
+
     const { error } = await supabase
       .from('bookings')
       .update({ status: 'cancelled' })
       .eq('id', bookingId);
-    return !error;
+
+    if (error) return false;
+
+    await supabase.rpc('decrement_volunteers', { event_id_param: eventId });
+    if (booking?.user_id) {
+      await supabase.rpc('remove_hours_from_user', {
+        user_id_param: booking.user_id,
+        event_id_param: eventId,
+      });
+    }
+
+    return true;
   } catch (e) {
     return false;
   }
 }
 
 // ============================================
-// БРОНИРОВАНИЯ
+// БРОНИРОВАНИЯ ПОЛЬЗОВАТЕЛЯ
 // ============================================
 export async function fetchUserBookings(userId) {
   if (!userId) return [];
@@ -172,7 +219,7 @@ export async function fetchLeaderboard() {
 }
 
 // ============================================
-// НИКНЕЙМ
+// ПРОВЕРКА НИКНЕЙМА
 // ============================================
 export async function checkNickname(nickname, userId = null) {
   try {
@@ -199,7 +246,7 @@ export async function updateProfile(userId, updates) {
 }
 
 // ============================================
-// АВАТАР
+// ЗАГРУЗКА АВАТАРА
 // ============================================
 export async function uploadAvatar(userId, uri) {
   try {

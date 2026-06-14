@@ -1,13 +1,14 @@
 // src/components/FilterSheet.js
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput,
 } from 'react-native';
-import { X, Filter } from 'lucide-react-native';
+import { X, Filter, MapPin } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useEventStore } from '../stores/eventStore';
 
 const CATEGORIES = [
+  { key: null, label: 'Все' },
   { key: 'ecology', label: '🌿 Экология' },
   { key: 'social', label: '🤝 Социальная помощь' },
   { key: 'education', label: '📚 Образование' },
@@ -30,6 +31,7 @@ export default function FilterSheet() {
   const filters = useEventStore((state) => state.filters);
   const setFilter = useEventStore((state) => state.setFilter);
   const resetFilters = useEventStore((state) => state.resetFilters);
+  const loadEvents = useEventStore((state) => state.loadEvents);   // <-- добавили
 
   return (
     <>
@@ -44,7 +46,7 @@ export default function FilterSheet() {
       <Modal
         visible={visible}
         animationType="slide"
-        presentationStyle="pageSheet"
+        transparent={false}
         onRequestClose={() => setVisible(false)}
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
@@ -55,13 +57,30 @@ export default function FilterSheet() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Категории */}
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={{ paddingBottom: 30 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Город */}
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Город</Text>
+            <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <MapPin size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                value={filters.city || ''}
+                onChangeText={(text) => setFilter('city', text || null)}
+                placeholder="Введите город"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+
+            {/* Категория */}
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Категория</Text>
             <View style={styles.chipContainer}>
               {CATEGORIES.map((cat) => (
                 <TouchableOpacity
-                  key={cat.key}
+                  key={String(cat.key)}
                   style={[
                     styles.chip,
                     {
@@ -69,11 +88,14 @@ export default function FilterSheet() {
                       borderColor: filters.category === cat.key ? colors.primary : colors.border,
                     },
                   ]}
-                  onPress={() => setFilter('category', filters.category === cat.key ? null : cat.key)}
+                  onPress={() => setFilter('category', cat.key)}
                 >
-                  <Text style={[styles.chipText, {
-                    color: filters.category === cat.key ? '#FFFFFF' : colors.text,
-                  }]}>
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: filters.category === cat.key ? '#FFFFFF' : colors.text },
+                    ]}
+                  >
                     {cat.label}
                   </Text>
                 </TouchableOpacity>
@@ -81,7 +103,7 @@ export default function FilterSheet() {
             </View>
 
             {/* Сортировка */}
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>Сортировка</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Сортировка</Text>
             {SORT_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.key}
@@ -103,8 +125,8 @@ export default function FilterSheet() {
               </TouchableOpacity>
             ))}
 
-            {/* Часы */}
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>Минимум часов</Text>
+            {/* Минимум часов */}
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Минимум часов</Text>
             <View style={styles.hoursContainer}>
               {[1, 2, 3, 4, 6, 8].map((h) => (
                 <TouchableOpacity
@@ -118,7 +140,12 @@ export default function FilterSheet() {
                   ]}
                   onPress={() => setFilter('hoursMin', filters.hoursMin === h ? null : h)}
                 >
-                  <Text style={{ color: filters.hoursMin === h ? '#FFFFFF' : colors.text, fontWeight: '500' }}>
+                  <Text
+                    style={{
+                      color: filters.hoursMin === h ? '#FFFFFF' : colors.text,
+                      fontWeight: '500',
+                    }}
+                  >
                     {h} ч
                   </Text>
                 </TouchableOpacity>
@@ -126,7 +153,7 @@ export default function FilterSheet() {
             </View>
           </ScrollView>
 
-          {/* Кнопки */}
+          {/* Футер с кнопками */}
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <TouchableOpacity
               style={[styles.resetButton, { borderColor: colors.border }]}
@@ -139,7 +166,10 @@ export default function FilterSheet() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.applyButton, { backgroundColor: colors.primary }]}
-              onPress={() => setVisible(false)}
+              onPress={() => {
+                loadEvents();   // <-- загружаем мероприятия с новыми фильтрами
+                setVisible(false);
+              }}
             >
               <Text style={styles.applyText}>Применить</Text>
             </TouchableOpacity>
@@ -152,50 +182,116 @@ export default function FilterSheet() {
 
 const styles = StyleSheet.create({
   triggerButton: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 12, borderWidth: 1, gap: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 6,
   },
   triggerText: { fontSize: 14, fontWeight: '500' },
-  modalContainer: { flex: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
+  modalContainer: {
+    flex: 1,
+    paddingTop: 60,
   },
-  headerTitle: { fontSize: 20, fontWeight: '700' },
-  content: { flex: 1, paddingHorizontal: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
-  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  headerTitle: { fontSize: 22, fontWeight: '700' },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: 46,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    height: '100%',
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
   chipText: { fontSize: 14 },
   sortOption: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 12,
-    borderRadius: 10, borderWidth: 1, gap: 10, marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 10,
+    marginBottom: 8,
   },
   radioOuter: {
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 2, borderColor: '#C0C0C0',
-    justifyContent: 'center', alignItems: 'center',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#C0C0C0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
   sortText: { fontSize: 14 },
-  hoursContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  hoursContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   hourChip: {
-    width: 54, height: 40, borderRadius: 10,
-    borderWidth: 1, justifyContent: 'center', alignItems: 'center',
+    width: 54,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   footer: {
-    flexDirection: 'row', paddingHorizontal: 20,
-    paddingVertical: 16, gap: 12, borderTopWidth: 1,
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
+    borderTopWidth: 1,
   },
   resetButton: {
-    flex: 1, paddingVertical: 14, borderRadius: 12,
-    borderWidth: 1, alignItems: 'center',
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
   },
   resetText: { fontSize: 16, fontWeight: '500' },
   applyButton: {
-    flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   applyText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });

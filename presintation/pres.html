@@ -29,7 +29,6 @@
             user-select: none;
         }
 
-        /* Контейнер слайдов */
         .slides-container {
             width: 100%;
             height: 100vh;
@@ -58,7 +57,6 @@
             pointer-events: all;
         }
 
-        /* Анимации фона */
         .bg-orb {
             position: absolute;
             border-radius: 50%;
@@ -77,7 +75,6 @@
             75% { transform: translate(10px, -10px) scale(1.05); }
         }
 
-        /* Титульный слайд */
         .title-slide h1 {
             font-size: 5rem;
             font-weight: 900;
@@ -124,7 +121,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Заголовки слайдов */
         h2 {
             font-size: 3rem;
             font-weight: 800;
@@ -137,14 +133,6 @@
             background-clip: text;
         }
 
-        h3 {
-            font-size: 1.8rem;
-            color: var(--text);
-            margin-bottom: 20px;
-            z-index: 1;
-        }
-
-        /* Карточки */
         .cards {
             display: flex;
             gap: 20px;
@@ -173,7 +161,6 @@
         .card h4 { font-size: 1.3rem; margin-bottom: 10px; color: var(--text); }
         .card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
 
-        /* Таблица сравнения */
         .compare-table {
             display: grid;
             grid-template-columns: 1.5fr 1fr 1fr 1fr;
@@ -203,9 +190,7 @@
         }
         .check { color: var(--success); font-size: 1.5rem; }
         .cross { color: var(--error); font-size: 1.5rem; }
-        .highlight { color: var(--warning); font-weight: 700; }
 
-        /* Технические блоки */
         .tech-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -227,10 +212,9 @@
             transform: scale(1.05);
         }
         .tech-item .emoji { font-size: 2.5rem; margin-bottom: 10px; }
-        .tech-item .name { font-weight: 700; color: var(--text); margin-bottom: 5px; }
+        .tech-item .name { font-weight: 700; color: var(--text); }
         .tech-item .desc { font-size: 0.85rem; color: var(--text-secondary); }
 
-        /* Идеи */
         .ideas-list {
             text-align: left;
             z-index: 1;
@@ -246,12 +230,71 @@
             align-items: center;
             gap: 12px;
         }
-        .ideas-list li::before {
-            content: '💡';
-            font-size: 1.5rem;
+        .ideas-list li::before { content: '💡'; font-size: 1.5rem; }
+
+        .quote-slide {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            padding: 60px 100px;
+            z-index: 1;
+            width: 100%;
+        }
+        .quote-photo {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            background: #333;
+            flex-shrink: 0;
+        }
+        .quote-text-block { flex: 1; }
+        .quote-text {
+            font-size: 2rem;
+            font-style: italic;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        .quote-author {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-style: normal;
+            font-weight: 600;
         }
 
-        /* Навигация */
+        .diagram-placeholder {
+            width: 80%;
+            height: 60%;
+            background: var(--surface);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            z-index: 1;
+            position: relative;
+        }
+        .diagram-placeholder .icon { font-size: 3rem; margin-bottom: 20px; }
+        .diagram-label {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         .nav {
             position: fixed;
             bottom: 30px;
@@ -298,7 +341,6 @@
             width: 25px;
         }
 
-        /* Счетчик слайда */
         .counter {
             position: fixed;
             top: 30px;
@@ -314,6 +356,9 @@
             h2 { font-size: 2rem !important; }
             .tech-grid { grid-template-columns: repeat(2, 1fr); }
             .compare-table { font-size: 0.8rem; }
+            .quote-slide { flex-direction: column; gap: 30px; padding: 30px; }
+            .quote-photo { width: 200px; height: 200px; }
+            .quote-text { font-size: 1.5rem; text-align: center; }
         }
     </style>
 </head>
@@ -330,8 +375,57 @@
         <p class="author">Абросимов Максим Романович</p>
     </div>
 
-    <!-- Слайд 2: О проекте -->
+    <!-- Слайд 2: IDEF0 A0 -->
     <div class="slide" data-index="1">
+        <div class="bg-orb"></div>
+        <h2>Диаграмма IDEF0 — Уровень A0</h2>
+        <div class="diagram-placeholder">
+            <span class="diagram-label">IDEF0 A0</span>
+            <div class="icon">📊</div>
+            <p>Здесь будет размещена диаграмма</p>
+            <p>Контекстная диаграмма бизнес-процесса</p>
+        </div>
+    </div>
+
+    <!-- Слайд 3: IDEF0 A1 -->
+    <div class="slide" data-index="2">
+        <div class="bg-orb"></div>
+        <h2>Диаграмма IDEF0 — Уровень A1</h2>
+        <div class="diagram-placeholder">
+            <span class="diagram-label">IDEF0 A1</span>
+            <div class="icon">📈</div>
+            <p>Здесь будет размещена диаграмма</p>
+            <p>Декомпозиция контекстной диаграммы</p>
+        </div>
+    </div>
+
+    <!-- Слайд 4: DFD -->
+    <div class="slide" data-index="3">
+        <div class="bg-orb"></div>
+        <h2>Диаграмма потоков данных (DFD)</h2>
+        <div class="diagram-placeholder">
+            <span class="diagram-label">DFD</span>
+            <div class="icon">🔄</div>
+            <p>Здесь будет размещена диаграмма</p>
+            <p>Потоки данных между процессами и сущностями</p>
+        </div>
+    </div>
+
+    <!-- Слайд 5: Цитата Стива Джобса (фото слева, цитата справа) -->
+    <div class="slide" data-index="4">
+        <div class="bg-orb"></div><div class="bg-orb"></div>
+        <div class="quote-slide">
+            <!-- Фото из локального файла steve_jobs.jpg -->
+            <img src=".\VolunteerHubClean\presintation\steve_jobs.jpg" alt="Стив Джобс" class="quote-photo">
+            <div class="quote-text-block">
+                <p class="quote-text">«Дизайн — это не просто то, как выглядит продукт или как он ощущается. Дизайн — это то, как он работает.»</p>
+                <p class="quote-author">— Стив Джобс</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 6: О проекте -->
+    <div class="slide" data-index="5">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>О проекте</h2>
         <div class="cards">
@@ -341,8 +435,8 @@
         </div>
     </div>
 
-    <!-- Слайд 3: Анализ конкурентов -->
-    <div class="slide" data-index="2">
+    <!-- Слайд 7: Анализ конкурентов -->
+    <div class="slide" data-index="6">
         <div class="bg-orb"></div>
         <h2>Анализ конкурентов</h2>
         <div class="compare-table">
@@ -356,8 +450,8 @@
         </div>
     </div>
 
-    <!-- Слайд 4: Дизайн -->
-    <div class="slide" data-index="3">
+    <!-- Слайд 8: Дизайн -->
+    <div class="slide" data-index="7">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Дизайн и UI/UX</h2>
         <div class="cards">
@@ -367,8 +461,8 @@
         </div>
     </div>
 
-    <!-- Слайд 5: Техническая архитектура -->
-    <div class="slide" data-index="4">
+    <!-- Слайд 9: Техническая архитектура -->
+    <div class="slide" data-index="8">
         <h2>Техническая архитектура</h2>
         <div class="tech-grid">
             <div class="tech-item"><div class="emoji">⚛️</div><div class="name">React Native</div><div class="desc">Кроссплатформенный UI</div></div>
@@ -382,8 +476,8 @@
         </div>
     </div>
 
-    <!-- Слайд 6: База данных -->
-    <div class="slide" data-index="5">
+    <!-- Слайд 10: База данных -->
+    <div class="slide" data-index="9">
         <div class="bg-orb"></div>
         <h2>Структура базы данных</h2>
         <div class="cards">
@@ -394,8 +488,8 @@
         <p style="margin-top:30px; color:var(--text-secondary); z-index:1;">RLS политики, индексы, хранимые функции для подсчета часов</p>
     </div>
 
-    <!-- Слайд 7: Функционал -->
-    <div class="slide" data-index="6">
+    <!-- Слайд 11: Функционал -->
+    <div class="slide" data-index="10">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Ключевой функционал</h2>
         <div class="cards">
@@ -405,8 +499,8 @@
         </div>
     </div>
 
-    <!-- Слайд 8: Особенности -->
-    <div class="slide" data-index="7">
+    <!-- Слайд 12: Особенности -->
+    <div class="slide" data-index="11">
         <div class="bg-orb"></div>
         <h2>Уникальные особенности</h2>
         <div class="cards">
@@ -416,8 +510,8 @@
         </div>
     </div>
 
-    <!-- Слайд 9: Идеи развития -->
-    <div class="slide" data-index="8">
+    <!-- Слайд 13: Идеи развития -->
+    <div class="slide" data-index="12">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Идеи для развития</h2>
         <ul class="ideas-list">
@@ -430,8 +524,8 @@
         </ul>
     </div>
 
-    <!-- Слайд 10: Спасибо -->
-    <div class="slide title-slide" data-index="9">
+    <!-- Слайд 14: Спасибо -->
+    <div class="slide title-slide" data-index="13">
         <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
         <h1>Спасибо!</h1>
         <div class="subtitle-line"></div>
@@ -443,7 +537,7 @@
 </div>
 
 <!-- Навигация -->
-<div class="counter" id="counter">1 / 10</div>
+<div class="counter" id="counter">1 / 14</div>
 <div class="nav">
     <button onclick="prevSlide()" id="prevBtn">◀</button>
     <div class="dots" id="dots"></div>
@@ -459,7 +553,6 @@
     let currentSlide = 0;
     const totalSlides = slides.length;
 
-    // Создаем точки
     for (let i = 0; i < totalSlides; i++) {
         const dot = document.createElement('div');
         dot.className = 'dot' + (i === 0 ? ' active' : '');
@@ -475,26 +568,15 @@
         nextBtn.disabled = currentSlide === totalSlides - 1;
     }
 
-    function goToSlide(index) {
-        currentSlide = index;
-        updateUI();
-    }
+    function goToSlide(index) { currentSlide = index; updateUI(); }
+    function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+    function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
 
-    function nextSlide() {
-        if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
-    }
-
-    function prevSlide() {
-        if (currentSlide > 0) goToSlide(currentSlide - 1);
-    }
-
-    // Клавиатура
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
         if (e.key === 'ArrowLeft') prevSlide();
     });
 
-    // Свайпы
     let touchStartX = 0;
     document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
     document.addEventListener('touchend', (e) => {

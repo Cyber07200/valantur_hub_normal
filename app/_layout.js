@@ -112,7 +112,7 @@ function PulsingRing() {
 }
 
 // ============================================
-// КНОПКА ТЕМЫ С ВОЛНОЙ НА ВЕСЬ ЭКРАН
+// ГЛОБАЛЬНАЯ КНОПКА ТЕМЫ – ПРАВЫЙ ВЕРХНИЙ УГОЛ
 // ============================================
 function GlobalThemeButton({ colors, isDark, toggleTheme }) {
   const [animating, setAnimating] = useState(false);
@@ -145,7 +145,6 @@ function GlobalThemeButton({ colors, isDark, toggleTheme }) {
 
   return (
     <>
-      {/* Волна на весь экран */}
       {animating && (
         <Animated.View
           pointerEvents="none"
@@ -164,7 +163,6 @@ function GlobalThemeButton({ colors, isDark, toggleTheme }) {
         />
       )}
 
-      {/* Кнопка */}
       <TouchableOpacity
         ref={buttonRef}
         onPress={handlePress}
@@ -218,9 +216,7 @@ function RootLayoutInner() {
         <Stack.Screen name="auth/register" options={{ headerShown: true, headerTitle: 'Регистрация', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
       </Stack>
 
-      {/* Глобальная кнопка темы */}
       <GlobalThemeButton colors={colors} isDark={isDark} toggleTheme={toggleTheme} />
-
       {NotificationComponent}
       {AlertComponent}
     </>
@@ -231,9 +227,6 @@ export default function RootLayout() {
   return <ThemeProvider><RootLayoutInner /></ThemeProvider>;
 }
 
-// ============================================
-// СТИЛИ
-// ============================================
 const splashStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   bgGradient: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },

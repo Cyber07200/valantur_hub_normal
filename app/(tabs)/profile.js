@@ -1,8 +1,8 @@
 // app/(tabs)/profile.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Image, ActivityIndicator, Modal, FlatList,
+  TextInput, Image, ActivityIndicator, Modal, FlatList, Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,12 +28,13 @@ export default function ProfileScreen() {
   const [editBio, setEditBio] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Лидерборд
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [leaders, setLeaders] = useState([]);
   const [leadersLoading, setLeadersLoading] = useState(false);
   const [userRank, setUserRank] = useState(null);
+
+  const editScale = useRef(new Animated.Value(1)).current;
 
   const loadProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -165,6 +166,14 @@ export default function ProfileScreen() {
     }
   };
 
+  const animateEditButton = () => {
+    Animated.sequence([
+      Animated.spring(editScale, { toValue: 0.9, useNativeDriver: true }),
+      Animated.spring(editScale, { toValue: 1, friction: 3, useNativeDriver: true }),
+    ]).start();
+    setEditMode(true);
+  };
+
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -193,9 +202,7 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Профиль</Text>
-        <TouchableOpacity onPress={() => setEditMode(!editMode)}>
-          <Edit3 size={20} color={editMode ? colors.primary : colors.textSecondary} />
-        </TouchableOpacity>
+        {/* Карандаш убран */}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -227,6 +234,18 @@ export default function ProfileScreen() {
               <View style={styles.stat}><Clock size={20} color={colors.success} /><Text style={[styles.statNum, { color: colors.text }]}>{bookings?.length || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>записей</Text></View>
             </View>
 
+            {/* Кнопка редактирования с анимацией */}
+            <Animated.View style={{ transform: [{ scale: editScale }], width: '100%' }}>
+              <TouchableOpacity
+                style={[styles.editProfileBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={animateEditButton}
+                activeOpacity={0.7}
+              >
+                <Edit3 size={20} color={colors.primary} />
+                <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>Редактировать профиль</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
             <TouchableOpacity
               style={[styles.leaderboardBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={handleOpenLeaderboard}
@@ -246,11 +265,9 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {/* Настройки (без Switch, только индикатор темы) */}
         <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.settingRow}>
-            <Moon size={20} color={colors.text} />
-            <Text style={[styles.settingText, { color: colors.text }]}>Тёмная тема</Text>
+            <Moon size={20} color={colors.text} /><Text style={[styles.settingText, { color: colors.text }]}>Тёмная тема</Text>
             <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{isDark ? '🌙 Включена' : '☀️ Выключена'}</Text>
           </View>
         </View>
@@ -307,25 +324,35 @@ export default function ProfileScreen() {
                   showsVerticalScrollIndicator={false}
                   renderItem={({ item, index }) => {
                     const isCurrentUser = user?.id === item.id;
-                    const bgColor = index === 0 ? '#FFF9E6' : index === 1 ? '#F5F5F5' : index === 2 ? '#FFF5EE' : colors.surface;
-                    const borderColor = index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : colors.border;
+                    const isTop3 = index < 3;
+                    const bgColor = isTop3
+                      ? (index === 0 ? '#FFF9E6' : index === 1 ? '#F5F5F5' : '#FFF5EE')
+                      : colors.surface;
+                    const borderColor = isTop3
+                      ? (index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32')
+                      : colors.border;
+                    const nameColor = isTop3 ? '#1F2937' : colors.text;
+                    const nickColor = isTop3 ? '#4B5563' : colors.textSecondary;
 
                     return (
-                      <View style={[lbStyles.leaderCard, { backgroundColor: bgColor, borderColor: isCurrentUser ? colors.primary : borderColor }, isCurrentUser && lbStyles.currentCard]}>
+                      <View style={[lbStyles.leaderCard, {
+                        backgroundColor: bgColor,
+                        borderColor: isCurrentUser ? colors.primary : borderColor,
+                      }, isCurrentUser && lbStyles.currentCard]}>
                         <View style={lbStyles.rankIcon}>{getRankIcon(index)}</View>
                         <View style={[lbStyles.avatar, { backgroundColor: colors.primaryLight }]}>
                           {item.avatar_url ? <Image source={{ uri: item.avatar_url }} style={lbStyles.avatarImg} /> : <User size={22} color={colors.primary} />}
                         </View>
                         <View style={lbStyles.infoBlock}>
                           <View style={lbStyles.nameRow}>
-                            <Text style={[lbStyles.name, { color: colors.text }]} numberOfLines={1}>{item.full_name || 'Волонтер'}</Text>
+                            <Text style={[lbStyles.name, { color: nameColor }]} numberOfLines={1}>{item.full_name || 'Волонтер'}</Text>
                             {isCurrentUser && <View style={[lbStyles.youBadge, { backgroundColor: colors.primary }]}><Text style={lbStyles.youText}>Вы</Text></View>}
                           </View>
-                          <Text style={[lbStyles.nick, { color: colors.textSecondary }]}>@{item.nickname || '---'}</Text>
+                          <Text style={[lbStyles.nick, { color: nickColor }]}>@{item.nickname || '---'}</Text>
                         </View>
                         <View style={lbStyles.hoursBlock}>
-                          <Star size={14} color={index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : colors.primary} />
-                          <Text style={[lbStyles.hours, { color: colors.text }]}>{item.total_hours || 0} ч</Text>
+                          <Star size={14} color={isTop3 ? (index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32') : colors.primary} />
+                          <Text style={[lbStyles.hours, { color: isTop3 ? '#1F2937' : colors.text }]}>{item.total_hours || 0} ч</Text>
                         </View>
                       </View>
                     );
@@ -369,6 +396,17 @@ const styles = StyleSheet.create({
   stat: { alignItems: 'center', gap: 4 },
   statNum: { fontSize: 22, fontWeight: '700' },
   statLabel: { fontSize: 12 },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  editProfileBtnText: { fontSize: 16, fontWeight: '600' },
   leaderboardBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     width: '100%', padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 16,

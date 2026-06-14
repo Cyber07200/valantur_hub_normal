@@ -1,9 +1,9 @@
 // app/(tabs)/bookings.js
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Calendar, MapPin, Clock, XCircle } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useBookings } from '../../src/hooks/useBookings';
@@ -15,7 +15,14 @@ export default function BookingsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const { bookings, loading, cancelBooking } = useBookings();
+  const { bookings, loading, cancelBooking, refresh } = useBookings();
+
+  // Автоматическое обновление при возврате на вкладку
+  useFocusEffect(
+    useCallback(() => {
+      if (user) refresh();
+    }, [user, refresh])
+  );
 
   if (!user) {
     return (
@@ -34,28 +41,26 @@ export default function BookingsScreen() {
     );
   }
 
-  const handleCancel = (bookingId, eventId, eventTitle, eventDate) => {
-    global.showAlert({
+  const handleCancel = (bookingId, eventId, eventTitle) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    const event = booking?.event;
+    const eventDate = event ? new Date(event.event_date).toLocaleDateString('ru-RU', {
+      day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+    }) : '';
+
+    global.showAlert?.({
       type: 'error',
       title: 'Отменить запись?',
-      message: `${eventTitle}\n${eventDate ? '📅 ' + eventDate + '\n' : ''}Вы уверены? Это действие нельзя отменить`,
+      message: `${eventTitle}\n${eventDate ? '📅 ' + eventDate + '\n' : ''}Вы уверены?`,
       confirmText: 'Да, отменить',
       cancelText: 'Нет',
       onConfirm: async () => {
-  safeHaptic('success');
-  await cancelBooking(bookingId, eventId);
-
-  if (global.showNotification) {
-    global.showNotification('error', 'Запись отменена', `${eventTitle}\nЧасы убраны из профиля`);
-  }
-
-  showCancelNotification(eventTitle);
-
-  // ✅ Обновляем профиль
-  if (global.refreshProfile) {
-    global.refreshProfile();
-  }
-},
+        safeHaptic('success');
+        await cancelBooking(bookingId, eventId);
+        if (global.showNotification) {
+          global.showNotification('error', 'Запись отменена', eventTitle);
+        }
+      },
     });
   };
 
@@ -79,23 +84,29 @@ export default function BookingsScreen() {
           </View>
           {item.status === 'registered' && (
             <TouchableOpacity
-              onPress={() => handleCancel(item.id, event.id, event.title, formattedDate)}
+              onPress={() => handleCancel(item.id, event.id, event.title)}
               style={styles.cancelButton}
             >
               <XCircle size={20} color={colors.error} />
             </TouchableOpacity>
           )}
         </View>
+
         <TouchableOpacity onPress={() => router.push(`/event/${event.id}`)}>
-          <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={2}>{event.title}</Text>
+          <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={2}>
+            {event.title}
+          </Text>
         </TouchableOpacity>
+
         <View style={styles.infoRow}>
           <MapPin size={14} color={colors.textSecondary} />
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>{event.city}</Text>
         </View>
         <View style={styles.infoRow}>
           <Clock size={14} color={colors.textSecondary} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>{formattedDate} · {event.duration_hours} ч</Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+            {formattedDate} · {event.duration_hours} ч
+          </Text>
         </View>
       </View>
     );
@@ -105,8 +116,11 @@ export default function BookingsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Мои записи</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{bookings.length} {getBookingWord(bookings.length)}</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          {bookings.length} {getBookingWord(bookings.length)}
+        </Text>
       </View>
+
       <FlatList
         data={bookings}
         renderItem={renderBooking}

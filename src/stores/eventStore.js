@@ -1,4 +1,3 @@
-// src/stores/eventStore.js
 import { create } from 'zustand';
 import { fetchEvents, fetchEventById } from '../services/supabase';
 
@@ -19,9 +18,7 @@ export const useEventStore = create((set, get) => ({
   filters: { ...defaultFilters },
 
   setFilter: (key, value) => {
-    set((state) => ({
-      filters: { ...state.filters, [key]: value },
-    }));
+    set((state) => ({ filters: { ...state.filters, [key]: value } }));
   },
 
   resetFilters: () => {
@@ -38,9 +35,7 @@ export const useEventStore = create((set, get) => ({
 
     const newFull = { ...get().fullEvents };
     if (result.events) {
-      result.events.forEach((e) => {
-        newFull[e.id] = e;
-      });
+      result.events.forEach((e) => { newFull[e.id] = e; });
     }
 
     set({
@@ -60,16 +55,19 @@ export const useEventStore = create((set, get) => ({
     set({ loading: true });
 
     const result = await fetchEvents(filters, nextPage, 10);
+
+    // ✅ Убираем дубликаты, проверяя id
+    const existingIds = new Set(events.map((e) => e.id));
+    const newUniqueEvents = (result.events || []).filter(
+      (e) => !existingIds.has(e.id)
+    );
+
     const newFull = { ...fullEvents };
-    if (result.events) {
-      result.events.forEach((e) => {
-        newFull[e.id] = e;
-      });
-    }
+    newUniqueEvents.forEach((e) => { newFull[e.id] = e; });
 
     set({
-      events: [...events, ...(result.events || [])],
-      hasMore: result.hasMore ?? false,
+      events: [...events, ...newUniqueEvents],
+      hasMore: result.hasMore && newUniqueEvents.length > 0,
       loading: false,
       fullEvents: newFull,
     });
@@ -96,5 +94,20 @@ export const useEventStore = create((set, get) => ({
       }));
     }
     return detailed;
+  },
+
+  refreshEvent: async (eventId) => {
+    const detailed = await fetchEventById(eventId);
+    if (!detailed) return;
+    set((state) => {
+      const newFull = { ...state.fullEvents, [eventId]: detailed };
+      // Обновляем существующее мероприятие в списке, не добавляя дубликатов
+      const newEvents = state.events.map((e) =>
+        e.id === eventId
+          ? { ...e, current_volunteers: detailed.current_volunteers, max_volunteers: detailed.max_volunteers }
+          : e
+      );
+      return { fullEvents: newFull, events: newEvents };
+    });
   },
 }));

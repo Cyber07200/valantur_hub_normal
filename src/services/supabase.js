@@ -32,38 +32,20 @@ export async function fetchEvents(filters = {}, page = 1, pageSize = 10) {
       .eq('status', 'active')
       .range(from, to);
 
-    // Поиск по названию
     if (filters.search) query = query.ilike('title', `%${filters.search}%`);
-
-    // Фильтр по категории
     if (filters.category) query = query.eq('category', filters.category);
-
-    // Фильтр по городу
     if (filters.city) query = query.ilike('city', `%${filters.city}%`);
-
-    // Минимальное количество часов
     if (filters.hoursMin) query = query.gte('duration_hours', filters.hoursMin);
 
-    // Сортировка
     switch (filters.sortBy) {
-      case 'date_asc':
-        query = query.order('event_date', { ascending: true });
-        break;
-      case 'date_desc':
-        query = query.order('event_date', { ascending: false });
-        break;
-      case 'hours_asc':
-        query = query.order('duration_hours', { ascending: true });
-        break;
-      case 'hours_desc':
-        query = query.order('duration_hours', { ascending: false });
-        break;
-      default:
-        query = query.order('event_date', { ascending: true });
+      case 'date_asc': query = query.order('event_date', { ascending: true }); break;
+      case 'date_desc': query = query.order('event_date', { ascending: false }); break;
+      case 'hours_asc': query = query.order('duration_hours', { ascending: true }); break;
+      case 'hours_desc': query = query.order('duration_hours', { ascending: false }); break;
+      default: query = query.order('event_date', { ascending: true });
     }
 
     const { data, error, count } = await query;
-
     if (error) {
       console.log('[FETCH] Error:', error.message);
       return { events: [], total: 0, hasMore: false };
@@ -71,7 +53,6 @@ export async function fetchEvents(filters = {}, page = 1, pageSize = 10) {
 
     const hasMore = from + data.length < count;
     console.log(`[FETCH] received ${data.length}, total=${count}, hasMore=${hasMore}`);
-
     return { events: data || [], total: count, hasMore };
   } catch (e) {
     console.log('[FETCH] Exception:', e.message);
@@ -102,29 +83,45 @@ export async function fetchEventById(eventId) {
 }
 
 // ============================================
-// ЗАПИСЬ НА МЕРОПРИЯТИЕ (с мгновенным начислением часов)
+// ЗАПИСЬ НА МЕРОПРИЯТИЕ (с поддержкой повторной записи)
 // ============================================
 export async function bookEvent(userId, eventId) {
   try {
+    // Ищем любую запись (включая cancelled)
     const { data: existing } = await supabase
       .from('bookings')
-      .select('id')
+      .select('id, status')
       .eq('user_id', userId)
       .eq('event_id', eventId)
       .maybeSingle();
 
-    if (existing) return { success: false, message: 'Вы уже записаны' };
+    // Если есть активная запись (registered/attended) – нельзя
+    if (existing && (existing.status === 'registered' || existing.status === 'attended')) {
+      return { success: false, message: 'Вы уже записаны' };
+    }
 
+    if (existing && existing.status === 'cancelled') {
+      // Обновляем отменённую запись на registered
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({ status: 'registered' })
+        .eq('id', existing.id);
+      if (updateError) return { success: false, message: updateError.message };
+
+      // Восстанавливаем часы и счётчик
+      await supabase.rpc('increment_volunteers', { event_id_param: eventId });
+      await supabase.rpc('add_hours_to_user', { user_id_param: userId, event_id_param: eventId });
+      return { success: true, message: 'Вы снова записаны!' };
+    }
+
+    // Новая запись
     const { error } = await supabase
       .from('bookings')
       .insert({ user_id: userId, event_id: eventId });
-
     if (error) return { success: false, message: error.message };
 
-    // Мгновенно обновляем счётчики и часы
     await supabase.rpc('increment_volunteers', { event_id_param: eventId });
     await supabase.rpc('add_hours_to_user', { user_id_param: userId, event_id_param: eventId });
-
     return { success: true, message: 'Вы записаны! Часы начислены!' };
   } catch (e) {
     return { success: false, message: 'Ошибка соединения' };
@@ -156,7 +153,6 @@ export async function cancelBooking(bookingId, eventId) {
         event_id_param: eventId,
       });
     }
-
     return true;
   } catch (e) {
     return false;

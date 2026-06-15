@@ -8,6 +8,7 @@ import { Calendar, MapPin, Clock, XCircle } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useBookings } from '../../src/hooks/useBookings';
 import { useAuthStore } from '../../src/stores/authStore';
+import { useEventStore } from '../../src/stores/eventStore';
 import EmptyState from '../../src/components/EmptyState';
 import { safeHaptic } from '../../src/utils/platform';
 
@@ -16,8 +17,8 @@ export default function BookingsScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const { bookings, loading, cancelBooking, refresh } = useBookings();
+  const refreshEvent = useEventStore((state) => state.refreshEvent);
 
-  // Автоматическое обновление при возврате на вкладку
   useFocusEffect(
     useCallback(() => {
       if (user) refresh();
@@ -57,6 +58,10 @@ export default function BookingsScreen() {
       onConfirm: async () => {
         safeHaptic('success');
         await cancelBooking(bookingId, eventId);
+        // Обновляем мероприятие в кеше и списке
+        await refreshEvent(eventId);
+        // Обновляем профиль
+        if (global.refreshProfile) global.refreshProfile();
         if (global.showNotification) {
           global.showNotification('error', 'Запись отменена', eventTitle);
         }

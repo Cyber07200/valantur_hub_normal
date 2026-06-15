@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+// app/event/[id].js
+import React, { useState, useEffect, useCallback, useRef } from 'react'; // ✅ добавлен useRef
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Animated,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { MapPin, Clock, Users, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -19,11 +20,13 @@ export default function EventDetailScreen() {
   const user = useAuthStore((state) => state.user);
   const { bookEvent, bookings } = useBookings();
   const getEventById = useEventStore((state) => state.getEventById);
+  const refreshEvent = useEventStore((state) => state.refreshEvent);
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingInProgress, setBookingInProgress] = useState(false);
 
+  // Анимация (оставлена, но теперь useRef работает)
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(50)).current;
@@ -36,14 +39,18 @@ export default function EventDetailScreen() {
     ]).start();
   }, []);
 
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    getEventById(id).then(data => {
-      if (data) setEvent(data);
-      setLoading(false);
-    });
-  }, [id, getEventById]);
+  // При каждом показе экрана обновляем данные мероприятия
+  useFocusEffect(
+    useCallback(() => {
+      if (id) {
+        setLoading(true);
+        getEventById(id).then(data => {
+          if (data) setEvent(data);
+          setLoading(false);
+        });
+      }
+    }, [id, getEventById])
+  );
 
   const isBooked = bookings.some((b) => b.event_id === id && b.status === 'registered');
 
@@ -84,10 +91,9 @@ export default function EventDetailScreen() {
         const result = await bookEvent(id);
         if (result.success) {
           safeHaptic('success');
+          await refreshEvent(id);
+          if (global.refreshProfile) global.refreshProfile();
           global.showNotification?.('success', 'Вы записаны!', `${event.title}\n+${event.duration_hours} ч`);
-          const updated = await getEventById(id);
-          if (updated) setEvent(updated);
-          global.refreshProfile?.();
         } else {
           global.showAlert?.({ type: 'error', title: 'Ошибка', message: result.message, confirmText: 'OK' });
         }
@@ -107,9 +113,9 @@ export default function EventDetailScreen() {
   if (!event) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text, fontSize: 18 }}>Мероприятие не найдено</Text>
+        <Text style={{ color: colors.text, fontSize: 18, marginBottom: 12 }}>Мероприятие не найдено</Text>
         <TouchableOpacity onPress={handleBack}>
-          <Text style={{ color: colors.primary, fontSize: 16, marginTop: 12 }}>← Назад</Text>
+          <Text style={{ color: colors.primary, fontSize: 16 }}>← Назад</Text>
         </TouchableOpacity>
       </View>
     );
@@ -213,9 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingTop: 60, paddingHorizontal: 16, paddingBottom: 8,
   },
-  backButton: {
-    width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center',
-  },
+  backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '600', flex: 1, textAlign: 'center' },
   scrollContent: { padding: 20, paddingBottom: 120 },
   title: { fontSize: 24, fontWeight: '800', lineHeight: 30, marginBottom: 12 },

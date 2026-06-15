@@ -1,10 +1,10 @@
 // app/(tabs)/profile.js
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Image, ActivityIndicator, Modal, FlatList, Animated,
+  TextInput, Image, ActivityIndicator, Modal, FlatList,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { User, LogOut, Moon, Award, Clock, Camera, Edit3, Phone, BookOpen, AtSign, Trophy, Crown, Medal, Star, X } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -28,13 +28,12 @@ export default function ProfileScreen() {
   const [editBio, setEditBio] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Лидерборд
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [leaders, setLeaders] = useState([]);
   const [leadersLoading, setLeadersLoading] = useState(false);
   const [userRank, setUserRank] = useState(null);
-
-  const editScale = useRef(new Animated.Value(1)).current;
 
   const loadProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -48,9 +47,15 @@ export default function ProfileScreen() {
     }
   }, [user?.id]);
 
+  // Загружаем профиль при каждом появлении экрана
+  useFocusEffect(
+    useCallback(() => {
+      if (user) loadProfile();
+    }, [user, loadProfile])
+  );
+
   useEffect(() => {
     if (user) {
-      loadProfile();
       global.refreshProfile = loadProfile;
     }
     return () => { global.refreshProfile = null; };
@@ -166,14 +171,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const animateEditButton = () => {
-    Animated.sequence([
-      Animated.spring(editScale, { toValue: 0.9, useNativeDriver: true }),
-      Animated.spring(editScale, { toValue: 1, friction: 3, useNativeDriver: true }),
-    ]).start();
-    setEditMode(true);
-  };
-
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -202,7 +199,6 @@ export default function ProfileScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Профиль</Text>
-        {/* Карандаш убран */}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -234,17 +230,15 @@ export default function ProfileScreen() {
               <View style={styles.stat}><Clock size={20} color={colors.success} /><Text style={[styles.statNum, { color: colors.text }]}>{bookings?.length || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>записей</Text></View>
             </View>
 
-            {/* Кнопка редактирования с анимацией */}
-            <Animated.View style={{ transform: [{ scale: editScale }], width: '100%' }}>
-              <TouchableOpacity
-                style={[styles.editProfileBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={animateEditButton}
-                activeOpacity={0.7}
-              >
-                <Edit3 size={20} color={colors.primary} />
-                <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>Редактировать профиль</Text>
-              </TouchableOpacity>
-            </Animated.View>
+            {/* Кнопка редактирования – теперь растянута на всю ширину */}
+            <TouchableOpacity
+              style={[styles.editProfileBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => setEditMode(true)}
+              activeOpacity={0.7}
+            >
+              <Edit3 size={20} color={colors.primary} />
+              <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>Редактировать профиль</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.leaderboardBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -397,14 +391,9 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 22, fontWeight: '700' },
   statLabel: { fontSize: 12 },
   editProfileBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    width: '100%',   // ← теперь на всю ширину, как leaderboardBtn
+    paddingVertical: 14, borderRadius: 14, borderWidth: 1, marginBottom: 16,
   },
   editProfileBtnText: { fontSize: 16, fontWeight: '600' },
   leaderboardBtn: {

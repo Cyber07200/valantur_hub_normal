@@ -1,17 +1,34 @@
 // app/(tabs)/profile.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Image, ActivityIndicator, Modal, FlatList,
+  TextInput, Image, ActivityIndicator, Modal, FlatList, Animated, Dimensions, Easing,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { User, LogOut, Moon, Award, Clock, Camera, Edit3, Phone, BookOpen, AtSign, Trophy, Crown, Medal, Star, X } from 'lucide-react-native';
+import { User, LogOut, Moon, Award, Clock, Camera, Edit3, Phone, BookOpen, AtSign, Trophy, Crown, Medal, Star, X, Globe } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useBookings } from '../../src/hooks/useBookings';
 import { fetchProfile, updateProfile, uploadAvatar, checkNickname, fetchLeaderboard } from '../../src/services/supabase';
 import { safeHaptic } from '../../src/utils/platform';
+import { useTranslation } from '../../src/i18n/I18nContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width } = Dimensions.get('window');
+
+const languages = [
+  { code: 'ru', flag: '🇷🇺', label: 'Русский' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'zh', flag: '🇨🇳', label: '中文' },
+  { code: 'ja', flag: '🇯🇵', label: '日本語' },
+  { code: 'hi', flag: '🇮🇳', label: 'हिन्दी' },
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
+  { code: 'pt', flag: '🇧🇷', label: 'Português' },
+  { code: 'ko', flag: '🇰🇷', label: '한국어' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+];
 
 export default function ProfileScreen() {
   const { colors, isDark } = useTheme();
@@ -19,6 +36,7 @@ export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const { bookings } = useBookings();
+  const { t, lang, changeLanguage } = useTranslation();
 
   const [profile, setProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -27,6 +45,7 @@ export default function ProfileScreen() {
   const [editPhone, setEditPhone] = useState('');
   const [editBio, setEditBio] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Лидерборд
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -34,6 +53,14 @@ export default function ProfileScreen() {
   const [leaders, setLeaders] = useState([]);
   const [leadersLoading, setLeadersLoading] = useState(false);
   const [userRank, setUserRank] = useState(null);
+  const [previousRank, setPreviousRank] = useState(null);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [rankChanged, setRankChanged] = useState(false);
+  const congratsOpacity = useRef(new Animated.Value(0)).current;
+  const congratsSlide = useRef(new Animated.Value(-50)).current;
+  const rankBounce = useRef(new Animated.Value(1)).current;
+  const shineAnim = useRef(new Animated.Value(0)).current;
+  const userCardSlide = useRef(new Animated.Value(0)).current;
 
   const loadProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -47,7 +74,6 @@ export default function ProfileScreen() {
     }
   }, [user?.id]);
 
-  // Загружаем профиль при каждом появлении экрана
   useFocusEffect(
     useCallback(() => {
       if (user) loadProfile();
@@ -64,7 +90,6 @@ export default function ProfileScreen() {
   useEffect(() => {
     const checkFirstTime = async () => {
       try {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         const seen = await AsyncStorage.getItem('leaderboard_seen');
         if (seen === 'true') setShowIntro(false);
       } catch (e) {}
@@ -77,8 +102,32 @@ export default function ProfileScreen() {
     const data = await fetchLeaderboard();
     setLeaders(data || []);
     if (user?.id && data) {
-      const rank = data.findIndex((l) => l.id === user.id);
-      setUserRank(rank >= 0 ? rank + 1 : null);
+      const rank = data.findIndex((l) => l.id === user.id) + 1;
+      if (userRank && rank !== userRank) {
+        setPreviousRank(userRank);
+        setRankChanged(true);
+      }
+      setUserRank(rank);
+      if (rank <= 3 && rank !== userRank) {
+        setShowCongrats(true);
+        Animated.parallel([
+          Animated.timing(congratsOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.spring(congratsSlide, { toValue: 0, friction: 5, useNativeDriver: true }),
+        ]).start(() => {
+          setTimeout(() => {
+            Animated.timing(congratsOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+          }, 3000);
+        });
+      }
+      if (rank <= 3) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(shineAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+            Animated.timing(shineAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
+          ]),
+          { iterations: 3 }
+        ).start(() => shineAnim.setValue(0));
+      }
     }
     setLeadersLoading(false);
   };
@@ -87,13 +136,22 @@ export default function ProfileScreen() {
     safeHaptic('light');
     loadLeaders();
     setShowLeaderboard(true);
+    if (previousRank && userRank && previousRank > userRank) {
+      const diff = previousRank - userRank;
+      userCardSlide.setValue(diff * 70);
+      Animated.timing(userCardSlide, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.back(2)),
+        useNativeDriver: true,
+      }).start();
+    }
   };
 
   const handleGotIt = async () => {
     safeHaptic('light');
     setShowIntro(false);
     try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
       await AsyncStorage.setItem('leaderboard_seen', 'true');
     } catch (e) {}
     loadLeaders();
@@ -115,7 +173,7 @@ export default function ProfileScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        global.showAlert?.({ type: 'error', title: 'Нет доступа', message: 'Разрешите доступ к галерее', confirmText: 'OK' });
+        global.showAlert?.({ type: 'error', title: t.error, message: 'Разрешите доступ к галерее', confirmText: 'OK' });
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -127,7 +185,7 @@ export default function ProfileScreen() {
         await loadProfile();
       }
     } catch (error) {
-      global.showAlert?.({ type: 'error', title: 'Ошибка', message: 'Не удалось открыть галерею', confirmText: 'OK' });
+      global.showAlert?.({ type: 'error', title: t.error, message: 'Не удалось открыть галерею', confirmText: 'OK' });
     }
   };
 
@@ -136,28 +194,31 @@ export default function ProfileScreen() {
     if (editNickname !== profile.nickname) {
       const available = await checkNickname(editNickname, user.id);
       if (!available) {
-        global.showAlert?.({ type: 'error', title: 'Ошибка', message: 'Никнейм занят', confirmText: 'OK' });
+        global.showAlert?.({ type: 'error', title: t.error, message: 'Никнейм занят', confirmText: 'OK' });
         return;
       }
     }
     setSaving(true);
     const result = await updateProfile(user.id, {
-      full_name: editFullName, nickname: editNickname, phone: editPhone, bio: editBio,
+      full_name: editFullName,
+      nickname: editNickname,
+      phone: editPhone,
+      bio: editBio.trim().substring(0, 50),   // ← ограничение 50 символов
     });
     if (result.success) {
       safeHaptic('success');
       setEditMode(false);
       await loadProfile();
     } else {
-      global.showAlert?.({ type: 'error', title: 'Ошибка', message: result.message, confirmText: 'OK' });
+      global.showAlert?.({ type: 'error', title: t.error, message: result.message, confirmText: 'OK' });
     }
     setSaving(false);
   };
 
   const handleLogout = () => {
     global.showAlert?.({
-      type: 'warning', title: 'Выйти?', message: 'Вы уверены?',
-      confirmText: 'Выйти', cancelText: 'Отмена',
+      type: 'warning', title: t.warning, message: 'Вы уверены?',
+      confirmText: t.confirm, cancelText: t.cancel,
       onConfirm: () => { safeHaptic('medium'); signOut(); },
     });
   };
@@ -174,12 +235,12 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}><Text style={[styles.headerTitle, { color: colors.text }]}>Профиль</Text></View>
+        <View style={styles.header}><Text style={[styles.headerTitle, { color: colors.text }]}>{t.profile}</Text></View>
         <View style={styles.notAuth}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primaryLight }]}><User size={48} color={colors.primary} /></View>
-          <Text style={[styles.notAuthTitle, { color: colors.text }]}>Вы не вошли</Text>
+          <Text style={[styles.notAuthTitle, { color: colors.text }]}>{t.notLoggedIn}</Text>
           <TouchableOpacity style={[styles.loginBtn, { backgroundColor: colors.primary }]} onPress={() => router.push('/auth/login')}>
-            <Text style={styles.loginBtnText}>Войти</Text>
+            <Text style={styles.loginBtnText}>{t.login}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -189,17 +250,28 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}><Text style={[styles.headerTitle, { color: colors.text }]}>Профиль</Text></View>
+        <View style={styles.header}><Text style={[styles.headerTitle, { color: colors.text }]}>{t.profile}</Text></View>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={colors.primary} /></View>
       </View>
     );
   }
 
+  const shineColor = userRank === 1 ? '#FFD700' : userRank === 2 ? '#C0C0C0' : userRank === 3 ? '#CD7F32' : 'transparent';
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Профиль</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t.profile}</Text>
+        <TouchableOpacity onPress={() => setShowSettings(true)}>
+          <Globe size={22} color={colors.textSecondary} />
+        </TouchableOpacity>
       </View>
+
+      {showCongrats && (
+        <Animated.View style={[styles.congratsBanner, { opacity: congratsOpacity, transform: [{ translateY: congratsSlide }] }]}>
+          <Text style={{ fontSize: 16, color: '#FFF', fontWeight: '700' }}>🏆 {t.topCongrats} #{userRank}</Text>
+        </Animated.View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <TouchableOpacity onPress={handlePickAvatar} style={styles.avatarWrap}>
@@ -210,12 +282,21 @@ export default function ProfileScreen() {
 
         {editMode ? (
           <View style={styles.form}>
-            <EditField icon={User} label="Имя" value={editFullName} onChangeText={setEditFullName} colors={colors} />
-            <EditField icon={AtSign} label="Никнейм" value={editNickname} onChangeText={setEditNickname} colors={colors} autoCapitalize="none" />
-            <EditField icon={Phone} label="Телефон" value={editPhone} onChangeText={(t) => setEditPhone(formatPhone(t))} colors={colors} keyboardType="phone-pad" maxLength={18} />
-            <EditField icon={BookOpen} label="Биография" value={editBio} onChangeText={setEditBio} colors={colors} multiline numberOfLines={4} />
+            <EditField icon={User} label={t.name} value={editFullName} onChangeText={setEditFullName} colors={colors} />
+            <EditField icon={AtSign} label={t.nickname} value={editNickname} onChangeText={setEditNickname} colors={colors} autoCapitalize="none" />
+            <EditField icon={Phone} label={t.phone} value={editPhone} onChangeText={(text) => setEditPhone(formatPhone(text))} colors={colors} keyboardType="phone-pad" maxLength={18} />
+            <EditField
+              icon={BookOpen}
+              label={t.bio}
+              value={editBio}
+              onChangeText={(text) => setEditBio(text.substring(0, 50))}   // ← обрезаем при вводе
+              colors={colors}
+              multiline
+              numberOfLines={4}
+              maxLength={50}            // ← ограничение клавиатуры
+            />
             <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
-              {saving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveBtnText}>Сохранить</Text>}
+              {saving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveBtnText}>{t.save}</Text>}
             </TouchableOpacity>
           </View>
         ) : (
@@ -226,18 +307,17 @@ export default function ProfileScreen() {
             {profile.phone ? <View style={styles.infoRow}><Phone size={14} color={colors.textSecondary} /><Text style={[styles.infoText, { color: colors.textSecondary }]}>{profile.phone}</Text></View> : null}
             
             <View style={styles.stats}>
-              <View style={styles.stat}><Award size={20} color={colors.primary} /><Text style={[styles.statNum, { color: colors.text }]}>{profile.total_hours || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>часов</Text></View>
-              <View style={styles.stat}><Clock size={20} color={colors.success} /><Text style={[styles.statNum, { color: colors.text }]}>{bookings?.length || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>записей</Text></View>
+              <View style={styles.stat}><Award size={20} color={colors.primary} /><Text style={[styles.statNum, { color: colors.text }]}>{profile.total_hours || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t.hours}</Text></View>
+              <View style={styles.stat}><Clock size={20} color={colors.success} /><Text style={[styles.statNum, { color: colors.text }]}>{bookings?.length || 0}</Text><Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t.entries}</Text></View>
             </View>
 
-            {/* Кнопка редактирования – теперь растянута на всю ширину */}
             <TouchableOpacity
               style={[styles.editProfileBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => setEditMode(true)}
               activeOpacity={0.7}
             >
               <Edit3 size={20} color={colors.primary} />
-              <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>Редактировать профиль</Text>
+              <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>{t.editProfile}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -247,35 +327,57 @@ export default function ProfileScreen() {
             >
               <Trophy size={22} color="#FFD700" />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.leaderboardBtnTitle, { color: colors.text }]}>Таблица лидеров</Text>
-                <Text style={[styles.leaderboardBtnSub, { color: colors.textSecondary }]}>Соревнуйся с другими волонтёрами</Text>
+                <Text style={[styles.leaderboardBtnTitle, { color: colors.text }]}>{t.leaderboard}</Text>
+                <Text style={[styles.leaderboardBtnSub, { color: colors.textSecondary }]}>{t.compete}</Text>
               </View>
               {userRank && (
-                <View style={[styles.rankBadge, { backgroundColor: colors.primaryLight }]}>
+                <Animated.View style={[styles.rankBadge, { backgroundColor: colors.primaryLight, transform: [{ scale: rankBounce }] }]}>
                   <Text style={[styles.rankBadgeText, { color: colors.primary }]}>#{userRank}</Text>
-                </View>
+                </Animated.View>
               )}
             </TouchableOpacity>
           </>
         )}
 
-        <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.settingRow}>
-            <Moon size={20} color={colors.text} /><Text style={[styles.settingText, { color: colors.text }]}>Тёмная тема</Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{isDark ? '🌙 Включена' : '☀️ Выключена'}</Text>
-          </View>
-        </View>
+        <TouchableOpacity style={[styles.settingsBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => setShowSettings(true)}>
+          <Globe size={20} color={colors.text} />
+          <Text style={[styles.settingsBtnText, { color: colors.text }]}>{t.settings}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleLogout}>
-          <LogOut size={20} color={colors.error} /><Text style={[styles.logoutText, { color: colors.error }]}>Выйти</Text>
+          <LogOut size={20} color={colors.error} /><Text style={[styles.logoutText, { color: colors.error }]}>{t.logout}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Модальное окно настроек (с новыми языками) */}
+      <Modal visible={showSettings} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.settings}</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>{t.language}</Text>
+            {languages.map((lng) => (
+              <TouchableOpacity
+                key={lng.code}
+                style={[styles.langOption, { borderColor: lang === lng.code ? colors.primary : colors.border }]}
+                onPress={() => { changeLanguage(lng.code); setShowSettings(false); }}
+              >
+                <Text style={{ color: lang === lng.code ? colors.primary : colors.text, fontWeight: lang === lng.code ? '700' : '400' }}>
+                  {lng.flag} {lng.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity onPress={() => setShowSettings(false)} style={[styles.closeBtn, { backgroundColor: colors.primary }]}>
+              <Text style={{ color: '#FFF', fontWeight: '600' }}>{t.close}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Модальное окно лидерборда */}
       <Modal visible={showLeaderboard} animationType="slide" onRequestClose={() => setShowLeaderboard(false)}>
         <View style={[lbStyles.container, { backgroundColor: colors.background }]}>
           <View style={lbStyles.lbHeader}>
-            <Text style={[lbStyles.lbTitle, { color: colors.text }]}>🏆 Таблица лидеров</Text>
+            <Text style={[lbStyles.lbTitle, { color: colors.text }]}>🏆 {t.leaderboard}</Text>
             <TouchableOpacity onPress={() => setShowLeaderboard(false)}>
               <X size={24} color={colors.text} />
             </TouchableOpacity>
@@ -286,26 +388,27 @@ export default function ProfileScreen() {
               <View style={[lbStyles.introIcon, { backgroundColor: colors.primaryLight }]}>
                 <Trophy size={48} color={colors.primary} />
               </View>
-              <Text style={[lbStyles.introTitle, { color: colors.text }]}>Как это работает?</Text>
-              <Text style={[lbStyles.introText, { color: colors.textSecondary }]}>
-                Чем больше часов волонтёрской работы — тем выше место в рейтинге!{'\n\n'}
-                🥇 1 место — золото{'\n'}
-                🥈 2 место — серебро{'\n'}
-                🥉 3 место — бронза{'\n\n'}
-                Записывайтесь на мероприятия и поднимайтесь вверх!
-              </Text>
+              <Text style={[lbStyles.introTitle, { color: colors.text }]}>{t.leaderboard}</Text>
+              <Text style={[lbStyles.introText, { color: colors.textSecondary }]}>{t.leaderboardIntro}</Text>
               <TouchableOpacity style={[lbStyles.introBtn, { backgroundColor: colors.primary }]} onPress={handleGotIt}>
-                <Text style={lbStyles.introBtnText}>Понятно!</Text>
+                <Text style={lbStyles.introBtnText}>{t.understood}</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
               {userRank && (
-                <View style={[lbStyles.myCard, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-                  <Text style={[lbStyles.myLabel, { color: colors.primary }]}>Ваше место</Text>
-                  <Text style={[lbStyles.myRank, { color: colors.primary }]}>#{userRank}</Text>
+                <Animated.View style={[lbStyles.myCard, {
+                  backgroundColor: shineColor + '20',
+                  borderColor: shineColor,
+                  transform: [{ translateY: userCardSlide }]
+                }]}>
+                  <Text style={[lbStyles.myLabel, { color: colors.primary }]}>{t.yourPlace}</Text>
+                  <Animated.Text style={[lbStyles.myRank, {
+                    color: colors.text,   // ← меняется с темой
+                    transform: [{ scale: rankBounce }]
+                  }]}>#{userRank}</Animated.Text>
                   <Text style={[lbStyles.myHours, { color: colors.text }]}>{profile.total_hours || 0} ч</Text>
-                </View>
+                </Animated.View>
               )}
 
               {leadersLoading ? (
@@ -325,7 +428,7 @@ export default function ProfileScreen() {
                     const borderColor = isTop3
                       ? (index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32')
                       : colors.border;
-                    const nameColor = isTop3 ? '#1F2937' : colors.text;
+                    const nameColor = isTop3 ? '#1F2937' : colors.text;        // тёмный для светлого фона
                     const nickColor = isTop3 ? '#4B5563' : colors.textSecondary;
 
                     return (
@@ -392,8 +495,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12 },
   editProfileBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    width: '100%',   // ← теперь на всю ширину, как leaderboardBtn
-    paddingVertical: 14, borderRadius: 14, borderWidth: 1, marginBottom: 16,
+    width: '100%', paddingVertical: 14, borderRadius: 14, borderWidth: 1, marginBottom: 16,
   },
   editProfileBtnText: { fontSize: 16, fontWeight: '600' },
   leaderboardBtn: {
@@ -404,12 +506,14 @@ const styles = StyleSheet.create({
   leaderboardBtnSub: { fontSize: 12, marginTop: 2 },
   rankBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
   rankBadgeText: { fontSize: 14, fontWeight: '800' },
+  settingsBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    width: '100%', padding: 16, borderRadius: 16, borderWidth: 1, marginBottom: 16,
+  },
+  settingsBtnText: { fontSize: 16, fontWeight: '600' },
   form: { width: '100%', marginBottom: 16 },
   saveBtn: { paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 8 },
   saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-  section: { width: '100%', borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 16 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
-  settingText: { fontSize: 16, flex: 1 },
   logoutBtn: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 16, borderWidth: 1 },
   logoutText: { fontSize: 16, fontWeight: '600' },
   notAuth: { alignItems: 'center', paddingTop: 60 },
@@ -417,6 +521,18 @@ const styles = StyleSheet.create({
   notAuthTitle: { fontSize: 20, fontWeight: '700', marginBottom: 24 },
   loginBtn: { width: '100%', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
   loginBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  congratsBanner: {
+    backgroundColor: '#4CAF50', paddingVertical: 12, paddingHorizontal: 20, marginHorizontal: 20, borderRadius: 12,
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10,
+  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: width * 0.85, borderRadius: 20, padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  settingLabel: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
+  langOption: {
+    paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1, marginBottom: 10,
+  },
+  closeBtn: { paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 10 },
 });
 
 const lbStyles = StyleSheet.create({

@@ -281,6 +281,12 @@
             font-size: 1.2rem;
             z-index: 1;
             position: relative;
+            overflow: hidden;
+        }
+        .diagram-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .diagram-placeholder .icon { font-size: 3rem; margin-bottom: 20px; }
         .diagram-label {
@@ -293,6 +299,7 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 600;
+            z-index: 2;
         }
 
         .nav {
@@ -381,9 +388,7 @@
         <h2>Диаграмма IDEF0 — Уровень A0</h2>
         <div class="diagram-placeholder">
             <span class="diagram-label">IDEF0 A0</span>
-            <div class="icon">📊</div>
-            <p>Здесь будет размещена диаграмма</p>
-            <p>Контекстная диаграмма бизнес-процесса</p>
+            <img src="idef0_A0.png" alt="IDEF0 A0">
         </div>
     </div>
 
@@ -393,9 +398,7 @@
         <h2>Диаграмма IDEF0 — Уровень A1</h2>
         <div class="diagram-placeholder">
             <span class="diagram-label">IDEF0 A1</span>
-            <div class="icon">📈</div>
-            <p>Здесь будет размещена диаграмма</p>
-            <p>Декомпозиция контекстной диаграммы</p>
+            <img src="idef0_A1.png" alt="IDEF0 A1">
         </div>
     </div>
 
@@ -405,18 +408,25 @@
         <h2>Диаграмма потоков данных (DFD)</h2>
         <div class="diagram-placeholder">
             <span class="diagram-label">DFD</span>
-            <div class="icon">🔄</div>
-            <p>Здесь будет размещена диаграмма</p>
-            <p>Потоки данных между процессами и сущностями</p>
+            <img src="DFD.png" alt="DFD">
         </div>
     </div>
 
-    <!-- Слайд 5: Цитата Стива Джобса (фото слева, цитата справа) -->
+    <!-- Слайд 5: Use Case -->
     <div class="slide" data-index="4">
+        <div class="bg-orb"></div>
+        <h2>Диаграмма вариантов использования (Use Case)</h2>
+        <div class="diagram-placeholder">
+            <span class="diagram-label">Use Case</span>
+            <img src="Use_case.png" alt="Use Case">
+        </div>
+    </div>
+
+    <!-- Слайд 6: Цитата Стива Джобса -->
+    <div class="slide" data-index="5">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <div class="quote-slide">
-            <!-- Фото из локального файла steve_jobs.jpg -->
-            <img src=".\VolunteerHubClean\presintation\steve_jobs.jpg" alt="Стив Джобс" class="quote-photo">
+            <img src="steve_jobs.jpg" alt="Стив Джобс" class="quote-photo">
             <div class="quote-text-block">
                 <p class="quote-text">«Дизайн — это не просто то, как выглядит продукт или как он ощущается. Дизайн — это то, как он работает.»</p>
                 <p class="quote-author">— Стив Джобс</p>
@@ -424,8 +434,8 @@
         </div>
     </div>
 
-    <!-- Слайд 6: О проекте -->
-    <div class="slide" data-index="5">
+    <!-- Слайд 7: О проекте -->
+    <div class="slide" data-index="6">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>О проекте</h2>
         <div class="cards">
@@ -435,8 +445,8 @@
         </div>
     </div>
 
-    <!-- Слайд 7: Анализ конкурентов -->
-    <div class="slide" data-index="6">
+    <!-- Слайд 8: Анализ конкурентов -->
+    <div class="slide" data-index="7">
         <div class="bg-orb"></div>
         <h2>Анализ конкурентов</h2>
         <div class="compare-table">
@@ -450,8 +460,8 @@
         </div>
     </div>
 
-    <!-- Слайд 8: Дизайн -->
-    <div class="slide" data-index="7">
+    <!-- Слайд 9: Дизайн -->
+    <div class="slide" data-index="8">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Дизайн и UI/UX</h2>
         <div class="cards">
@@ -461,8 +471,8 @@
         </div>
     </div>
 
-    <!-- Слайд 9: Техническая архитектура -->
-    <div class="slide" data-index="8">
+    <!-- Слайд 10: Техническая архитектура -->
+    <div class="slide" data-index="9">
         <h2>Техническая архитектура</h2>
         <div class="tech-grid">
             <div class="tech-item"><div class="emoji">⚛️</div><div class="name">React Native</div><div class="desc">Кроссплатформенный UI</div></div>
@@ -476,8 +486,8 @@
         </div>
     </div>
 
-    <!-- Слайд 10: База данных -->
-    <div class="slide" data-index="9">
+    <!-- Слайд 11: База данных -->
+    <div class="slide" data-index="10">
         <div class="bg-orb"></div>
         <h2>Структура базы данных</h2>
         <div class="cards">
@@ -488,8 +498,8 @@
         <p style="margin-top:30px; color:var(--text-secondary); z-index:1;">RLS политики, индексы, хранимые функции для подсчета часов</p>
     </div>
 
-    <!-- Слайд 11: Функционал -->
-    <div class="slide" data-index="10">
+    <!-- Слайд 12: Функционал -->
+    <div class="slide" data-index="11">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Ключевой функционал</h2>
         <div class="cards">
@@ -499,8 +509,8 @@
         </div>
     </div>
 
-    <!-- Слайд 12: Особенности -->
-    <div class="slide" data-index="11">
+    <!-- Слайд 13: Особенности -->
+    <div class="slide" data-index="12">
         <div class="bg-orb"></div>
         <h2>Уникальные особенности</h2>
         <div class="cards">
@@ -510,8 +520,8 @@
         </div>
     </div>
 
-    <!-- Слайд 13: Идеи развития -->
-    <div class="slide" data-index="12">
+    <!-- Слайд 14: Идеи развития -->
+    <div class="slide" data-index="13">
         <div class="bg-orb"></div><div class="bg-orb"></div>
         <h2>Идеи для развития</h2>
         <ul class="ideas-list">
@@ -524,8 +534,8 @@
         </ul>
     </div>
 
-    <!-- Слайд 14: Спасибо -->
-    <div class="slide title-slide" data-index="13">
+    <!-- Слайд 15: Спасибо -->
+    <div class="slide title-slide" data-index="14">
         <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
         <h1>Спасибо!</h1>
         <div class="subtitle-line"></div>
@@ -537,7 +547,7 @@
 </div>
 
 <!-- Навигация -->
-<div class="counter" id="counter">1 / 14</div>
+<div class="counter" id="counter">1 / 15</div>
 <div class="nav">
     <button onclick="prevSlide()" id="prevBtn">◀</button>
     <div class="dots" id="dots"></div>
@@ -551,7 +561,7 @@
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     let currentSlide = 0;
-    const totalSlides = slides.length;
+    const totalSlides = slides.length;  // теперь 15
 
     for (let i = 0; i < totalSlides; i++) {
         const dot = document.createElement('div');

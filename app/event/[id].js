@@ -1,5 +1,5 @@
 // app/event/[id].js
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // ✅ добавлен useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Animated,
 } from 'react-native';
@@ -26,7 +26,7 @@ export default function EventDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [bookingInProgress, setBookingInProgress] = useState(false);
 
-  // Анимация (оставлена, но теперь useRef работает)
+  // Анимация
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(50)).current;
@@ -91,8 +91,12 @@ export default function EventDetailScreen() {
         const result = await bookEvent(id);
         if (result.success) {
           safeHaptic('success');
+          // Мгновенно обновляем данные мероприятия
           await refreshEvent(id);
+          // Обновляем профиль (часы)
           if (global.refreshProfile) global.refreshProfile();
+          // Обновляем список бронирований (счётчик в профиле)
+          if (global.refreshBookings) global.refreshBookings();
           global.showNotification?.('success', 'Вы записаны!', `${event.title}\n+${event.duration_hours} ч`);
         } else {
           global.showAlert?.({ type: 'error', title: 'Ошибка', message: result.message, confirmText: 'OK' });

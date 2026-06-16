@@ -10,12 +10,14 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAuthStore } from '../../src/stores/authStore';
 import { checkNickname } from '../../src/services/supabase';
 import { safeHaptic } from '../../src/utils/platform';
+import { useTranslation } from '../../src/i18n/I18nContext';
 
 export default function RegisterScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const signUp = useAuthStore((state) => state.signUp);
   const signIn = useAuthStore((state) => state.signIn);
+  const { t } = useTranslation();
 
   const [fullName, setFullName] = useState('');
   const [nickname, setNickname] = useState('');
@@ -25,9 +27,8 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [nicknameStatus, setNicknameStatus] = useState(null); // 'checking', 'available', 'taken'
+  const [nicknameStatus, setNicknameStatus] = useState(null);
 
-  // Анимация успешной регистрации
   const [showSuccess, setShowSuccess] = useState(false);
   const successScale = useRef(new Animated.Value(0)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
@@ -35,14 +36,10 @@ export default function RegisterScreen() {
 
   const checkNicknameTimer = useRef(null);
 
-  // Проверка никнейма с задержкой
   const handleNicknameChange = (text) => {
-    // Только английские буквы, цифры и подчеркивания
     const cleaned = text.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     setNickname(cleaned);
-    
     if (checkNicknameTimer.current) clearTimeout(checkNicknameTimer.current);
-    
     if (cleaned.length >= 3) {
       setNicknameStatus('checking');
       checkNicknameTimer.current = setTimeout(async () => {
@@ -56,12 +53,18 @@ export default function RegisterScreen() {
 
   const validate = () => {
     const newErrors = {};
-    if (!fullName.trim() || fullName.trim().length < 2) newErrors.fullName = 'Введите имя (минимум 2 символа)';
-    if (!nickname || nickname.length < 3) newErrors.nickname = 'Никнейм минимум 3 символа';
-    if (nicknameStatus === 'taken') newErrors.nickname = 'Никнейм занят';
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Некорректный email';
-    if (!password || password.length < 6) newErrors.password = 'Пароль минимум 6 символов';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Пароли не совпадают';
+    if (!fullName.trim() || fullName.trim().length < 2)
+      newErrors.fullName = t.validation?.requiredName || 'Введите имя (минимум 2 символа)';
+    if (!nickname || nickname.length < 3)
+      newErrors.nickname = t.validation?.nicknameMinLength || 'Никнейм минимум 3 символа';
+    if (nicknameStatus === 'taken')
+      newErrors.nickname = t.validation?.nicknameTaken || 'Никнейм занят';
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      newErrors.email = t.validation?.invalidEmail || 'Некорректный email';
+    if (!password || password.length < 6)
+      newErrors.password = t.validation?.passwordMinLength || 'Пароль минимум 6 символов';
+    if (password !== confirmPassword)
+      newErrors.confirmPassword = t.validation?.passwordsMismatch || 'Пароли не совпадают';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -75,15 +78,12 @@ export default function RegisterScreen() {
     const result = await signUp(email.trim(), password, fullName.trim(), nickname.trim());
 
     if (result.success) {
-      // Анимация успеха
       setShowSuccess(true);
-      
       Animated.parallel([
         Animated.spring(successScale, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
         Animated.timing(successOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       ]).start();
 
-      // Анимация заполнения круга
       Animated.timing(circleProgress, {
         toValue: 100,
         duration: 2000,
@@ -91,7 +91,6 @@ export default function RegisterScreen() {
         useNativeDriver: false,
       }).start();
 
-      // Через 2.5 секунды входим и переходим
       setTimeout(async () => {
         await signIn(email.trim(), password);
         safeHaptic('success');
@@ -99,13 +98,12 @@ export default function RegisterScreen() {
       }, 2500);
     } else {
       safeHaptic('medium');
-      Alert.alert('Ошибка регистрации', result.message);
+      Alert.alert(t.registrationError || 'Ошибка регистрации', result.message);
     }
 
     setLoading(false);
   };
 
-  // Экран успеха
   if (showSuccess) {
     return (
       <View style={[successStyles.container, { backgroundColor: '#4CAF50' }]}>
@@ -116,10 +114,10 @@ export default function RegisterScreen() {
           </Animated.View>
         </Animated.View>
         <Animated.Text style={[successStyles.title, { opacity: successOpacity }]}>
-          Регистрация успешна!
+          {t.registrationSuccess || 'Регистрация успешна!'}
         </Animated.Text>
         <Animated.Text style={[successStyles.subtitle, { opacity: successOpacity }]}>
-          Добро пожаловать, {fullName}!
+          {t.welcomeUser?.replace('{name}', fullName) || `Добро пожаловать, ${fullName}!`}
         </Animated.Text>
       </View>
     );
@@ -136,41 +134,92 @@ export default function RegisterScreen() {
           <View style={[styles.iconCircle, { backgroundColor: colors.primaryLight }]}>
             <UserPlus size={32} color={colors.primary} />
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>Присоединяйтесь!</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t.joinUs || 'Присоединяйтесь!'}</Text>
         </View>
 
         {/* Имя */}
-        <InputField icon={User} label="Имя" value={fullName} onChangeText={setFullName} placeholder="Иван Петров" error={errors.fullName} colors={colors} />
+        <InputField
+          icon={User}
+          label={t.name || 'Имя'}
+          value={fullName}
+          onChangeText={setFullName}
+          placeholder={t.namePlaceholder || 'Иван Петров'}
+          error={errors.fullName}
+          colors={colors}
+        />
 
         {/* Никнейм */}
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Никнейм *</Text>
-          <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: errors.nickname ? colors.error : nicknameStatus === 'available' ? colors.success : colors.border }]}>
+          <Text style={[styles.label, { color: colors.text }]}>{t.nickname || 'Никнейм'} *</Text>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: errors.nickname
+                  ? colors.error
+                  : nicknameStatus === 'available'
+                  ? colors.success
+                  : colors.border,
+              },
+            ]}
+          >
             <AtSign size={20} color={colors.textSecondary} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: colors.text }]}
               value={nickname}
               onChangeText={handleNicknameChange}
-              placeholder="volunteer_nick"
+              placeholder={t.nicknamePlaceholder || 'volunteer_nick'}
               placeholderTextColor={colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
             />
             {nicknameStatus === 'checking' && <ActivityIndicator size="small" color={colors.primary} />}
             {nicknameStatus === 'available' && <CheckCircle size={18} color={colors.success} />}
-            {nicknameStatus === 'taken' && <Text style={{ color: colors.error, fontSize: 12 }}>Занят</Text>}
+            {nicknameStatus === 'taken' && (
+              <Text style={{ color: colors.error, fontSize: 12 }}>{t.taken || 'Занят'}</Text>
+            )}
           </View>
           {errors.nickname && <Text style={[styles.errorText, { color: colors.error }]}>{errors.nickname}</Text>}
         </View>
 
         {/* Email */}
-        <InputField icon={Mail} label="Email" value={email} onChangeText={setEmail} placeholder="volunteer@email.ru" keyboardType="email-address" error={errors.email} colors={colors} />
+        <InputField
+          icon={Mail}
+          label={t.email || 'Email'}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t.emailPlaceholder || 'volunteer@email.ru'}
+          keyboardType="email-address"
+          error={errors.email}
+          colors={colors}
+        />
 
         {/* Пароль */}
-        <InputField icon={Lock} label="Пароль" value={password} onChangeText={setPassword} placeholder="Минимум 6 символов" secureTextEntry={!showPassword} error={errors.password} colors={colors} rightIcon={showPassword ? EyeOff : Eye} onRightIconPress={() => setShowPassword(!showPassword)} />
+        <InputField
+          icon={Lock}
+          label={t.password || 'Пароль'}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t.passwordMinPlaceholder || 'Минимум 6 символов'}
+          secureTextEntry={!showPassword}
+          error={errors.password}
+          colors={colors}
+          rightIcon={showPassword ? EyeOff : Eye}
+          onRightIconPress={() => setShowPassword(!showPassword)}
+        />
 
         {/* Подтверждение пароля */}
-        <InputField icon={Lock} label="Подтвердите пароль" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Повторите пароль" secureTextEntry={!showPassword} error={errors.confirmPassword} colors={colors} />
+        <InputField
+          icon={Lock}
+          label={t.confirmPassword || 'Подтвердите пароль'}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder={t.confirmPasswordPlaceholder || 'Повторите пароль'}
+          secureTextEntry={!showPassword}
+          error={errors.confirmPassword}
+          colors={colors}
+        />
 
         <TouchableOpacity
           style={[styles.submitButton, { backgroundColor: loading ? colors.primary + '80' : colors.primary }]}
@@ -178,13 +227,21 @@ export default function RegisterScreen() {
           disabled={loading}
           activeOpacity={0.8}
         >
-          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitButtonText}>Зарегистрироваться</Text>}
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.submitButtonText}>{t.registerButton || 'Зарегистрироваться'}</Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.loginLink}>
-          <Text style={[styles.loginText, { color: colors.textSecondary }]}>Уже есть аккаунт? </Text>
+          <Text style={[styles.loginText, { color: colors.textSecondary }]}>
+            {t.haveAccount || 'Уже есть аккаунт?'}{' '}
+          </Text>
           <TouchableOpacity onPress={() => router.replace('/auth/login')}>
-            <Text style={[styles.loginLinkText, { color: colors.primary }]}>Войти</Text>
+            <Text style={[styles.loginLinkText, { color: colors.primary }]}>
+              {t.loginButton || 'Войти'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -192,9 +249,7 @@ export default function RegisterScreen() {
   );
 }
 
-// ============================================
-// КОМПОНЕНТ ПОЛЯ ВВОДА
-// ============================================
+// Компонент поля ввода
 function InputField({ icon: Icon, label, value, onChangeText, placeholder, keyboardType, secureTextEntry, error, colors, rightIcon: RightIcon, onRightIconPress }) {
   return (
     <View style={styles.inputGroup}>
@@ -223,9 +278,6 @@ function InputField({ icon: Icon, label, value, onChangeText, placeholder, keybo
   );
 }
 
-// ============================================
-// КРУГ УСПЕХА (заполняется)
-// ============================================
 function SuccessCircle({ progress }) {
   const rotation = progress.interpolate({
     inputRange: [0, 100],
@@ -246,9 +298,6 @@ function SuccessCircle({ progress }) {
   );
 }
 
-// ============================================
-// СТИЛИ
-// ============================================
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },

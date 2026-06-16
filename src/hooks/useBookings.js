@@ -2,15 +2,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchUserBookings, bookEvent, cancelBooking } from '../services/supabase';
 import { useAuthStore } from '../stores/authStore';
-import { useEventStore } from '../stores/eventStore';
 
 export function useBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
-  const prevUserId = useRef(null);
-  const mountedRef = useRef(true);
 
   const loadBookings = useCallback(async () => {
     if (!userId) {
@@ -18,34 +15,34 @@ export function useBookings() {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     try {
       const data = await fetchUserBookings(userId);
-      if (mountedRef.current) {
-        setBookings(data || []);
-      }
+      if (mountedRef.current) setBookings(data || []);
     } catch (error) {
-      if (mountedRef.current) {
-        setBookings([]);
-      }
+      if (mountedRef.current) setBookings([]);
     } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
+      if (mountedRef.current) setLoading(false);
     }
   }, [userId]);
 
+  const mountedRef = useRef(true);
+
   useEffect(() => {
     mountedRef.current = true;
-    
-    if (userId !== prevUserId.current) {
-      prevUserId.current = userId;
+    if (userId) {
       loadBookings();
+    } else {
+      setBookings([]);
+      setLoading(false);
     }
+
+    // Сохраняем функцию обновления глобально, чтобы другие компоненты могли вызвать её
+    global.refreshBookings = loadBookings;
 
     return () => {
       mountedRef.current = false;
+      global.refreshBookings = null;
     };
   }, [userId, loadBookings]);
 
@@ -53,8 +50,8 @@ export function useBookings() {
     if (!userId) return { success: false, message: 'Нужно войти' };
     const result = await bookEvent(userId, eventId);
     if (result.success) {
-      // Мгновенно обновляем список
-      await loadBookings();
+      await loadBookings(); // обновляем список сразу
+      if (global.refreshBookings) global.refreshBookings(); // на всякий случай
     }
     return result;
   };
@@ -62,8 +59,8 @@ export function useBookings() {
   const handleCancelBooking = async (bookingId, eventId) => {
     const success = await cancelBooking(bookingId, eventId);
     if (success) {
-      // Мгновенно обновляем список
       await loadBookings();
+      if (global.refreshBookings) global.refreshBookings();
     }
     return success;
   };

@@ -2,11 +2,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { useAuthStore } from '../src/stores/authStore';
 import { useNotification } from '../src/components/InAppNotification';
 import { useCustomAlert } from '../src/components/CustomAlert';
+import { I18nProvider, useTranslation } from '../src/i18n/I18nContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const MAX_DIM = Math.max(SW, SH) * 2.5;
@@ -76,7 +78,10 @@ function SplashScreen() {
           <PulsingRing />
         </Animated.View>
         <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleTranslateY }] }}>
-          <Text style={splashStyles.title}>Волонтер Хаб</Text>
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={splashStyles.title}>Volunteer</Text>
+            <Text style={[splashStyles.title, { color: '#EC4899' }]}>Hub</Text>
+          </View>
         </Animated.View>
         <Animated.View style={{ opacity: subtitleOpacity, transform: [{ translateY: subtitleTranslateY }] }}>
           <Text style={splashStyles.subtitle}>Меняем мир вместе</Text>
@@ -181,8 +186,12 @@ function GlobalThemeButton({ colors, isDark, toggleTheme }) {
 // ============================================
 function RootLayoutInner() {
   const { colors, isDark, toggleTheme } = useTheme();
+  const { t, changeLanguage } = useTranslation();
   const initialize = useAuthStore((state) => state.initialize);
+  const user = useAuthStore((state) => state.user);
+  const authLoading = useAuthStore((state) => state.loading);
   const [showSplash, setShowSplash] = useState(true);
+  const [showLangModal, setShowLangModal] = useState(false);
   const { showNotification, NotificationComponent } = useNotification();
   const { showAlert, AlertComponent } = useCustomAlert();
 
@@ -191,10 +200,37 @@ function RootLayoutInner() {
     global.showNotification = showNotification;
     global.showAlert = showAlert;
   }, [showNotification, showAlert]);
+
   useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 3000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowLangModal(true);
+    } else {
+      setShowLangModal(false);
+    }
+  }, [user, authLoading]);
+
+  const handleLanguageSelected = async (lang) => {
+    await changeLanguage(lang);
+    setShowLangModal(false);
+  };
+
+  const languages = [
+    { code: 'ru', flag: '🇷🇺', label: 'Русский' },
+    { code: 'en', flag: '🇬🇧', label: 'English' },
+    { code: 'zh', flag: '🇨🇳', label: '中文' },
+    { code: 'ja', flag: '🇯🇵', label: '日本語' },
+    { code: 'hi', flag: '🇮🇳', label: 'हिन्दी' },
+    { code: 'es', flag: '🇪🇸', label: 'Español' },
+    { code: 'pt', flag: '🇧🇷', label: 'Português' },
+    { code: 'ko', flag: '🇰🇷', label: '한국어' },
+    { code: 'fr', flag: '🇫🇷', label: 'Français' },
+    { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+  ];
 
   if (showSplash) {
     return <><StatusBar style="light" /><SplashScreen /></>;
@@ -212,11 +248,41 @@ function RootLayoutInner() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="event/[id]" options={{ headerShown: false, animation: 'none' }} />
-        <Stack.Screen name="auth/login" options={{ headerShown: true, headerTitle: 'Вход', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
-        <Stack.Screen name="auth/register" options={{ headerShown: true, headerTitle: 'Регистрация', headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: true, headerTitle: t.loginTitle, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
+        <Stack.Screen name="auth/register" options={{ headerShown: true, headerTitle: t.registerTitle, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, presentation: 'modal' }} />
       </Stack>
 
       <GlobalThemeButton colors={colors} isDark={isDark} toggleTheme={toggleTheme} />
+
+      {/* Модальное окно выбора языка с планетой – показывается только если пользователь не авторизован */}
+      <Modal visible={showLangModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <Text style={styles.planetEmoji}>🌍</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t.chooseLanguage}</Text>
+            <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>{t.languageSelectionMessage}</Text>
+
+            <ScrollView
+              style={styles.langScrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.langScrollContent}
+            >
+              {languages.map((lng) => (
+                <TouchableOpacity
+                  key={lng.code}
+                  style={[styles.langOption, { borderColor: colors.border }]}
+                  onPress={() => handleLanguageSelected(lng.code)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.langFlag}>{lng.flag}</Text>
+                  <Text style={[styles.langLabel, { color: colors.text }]}>{lng.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {NotificationComponent}
       {AlertComponent}
     </>
@@ -224,7 +290,13 @@ function RootLayoutInner() {
 }
 
 export default function RootLayout() {
-  return <ThemeProvider><RootLayoutInner /></ThemeProvider>;
+  return (
+    <I18nProvider>
+      <ThemeProvider>
+        <RootLayoutInner />
+      </ThemeProvider>
+    </I18nProvider>
+  );
 }
 
 const splashStyles = StyleSheet.create({
@@ -264,5 +336,71 @@ const toggleStyles = StyleSheet.create({
     position: 'absolute',
     zIndex: 9999,
     elevation: 10,
+  },
+});
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  planetEmoji: {
+    fontSize: 56,
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+    paddingHorizontal: 10,
+  },
+  langScrollView: {
+    width: '100%',
+    maxHeight: 300,
+  },
+  langScrollContent: {
+    paddingBottom: 8,
+  },
+  langOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 10,
+    width: '100%',
+  },
+  langFlag: {
+    fontSize: 22,
+    marginRight: 14,
+  },
+  langLabel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

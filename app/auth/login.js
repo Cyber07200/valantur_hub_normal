@@ -1,28 +1,21 @@
 // app/auth/login.js
-// Экран входа в аккаунт
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, TextInput, StyleSheet, TouchableOpacity, Alert,
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useAuthStore } from '../../src/stores/authStore';
 import { safeHaptic } from '../../src/utils/platform';
+import { useTranslation } from '../../src/i18n/I18nContext';
 
 export default function LoginScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const signIn = useAuthStore((state) => state.signIn);
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,24 +23,22 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Валидация полей
   const validate = () => {
     const newErrors = {};
     if (!email.trim()) {
-      newErrors.email = 'Введите email';
+      newErrors.email = t.validation?.requiredEmail || 'Введите email';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Некорректный email';
+      newErrors.email = t.validation?.invalidEmail || 'Некорректный email';
     }
     if (!password) {
-      newErrors.password = 'Введите пароль';
+      newErrors.password = t.validation?.requiredPassword || 'Введите пароль';
     } else if (password.length < 6) {
-      newErrors.password = 'Пароль минимум 6 символов';
+      newErrors.password = t.validation?.passwordMinLength || 'Пароль минимум 6 символов';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Обработка входа
   const handleLogin = async () => {
     if (!validate()) return;
 
@@ -58,10 +49,10 @@ export default function LoginScreen() {
 
     if (result.success) {
       safeHaptic('success');
-      router.back(); // Возвращаемся на предыдущий экран
+      router.back();
     } else {
       safeHaptic('medium');
-      Alert.alert('Ошибка входа', result.message);
+      Alert.alert(t.loginError || 'Ошибка входа', result.message);
     }
 
     setLoading(false);
@@ -78,29 +69,23 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Приветствие */}
         <View style={styles.headerSection}>
           <View style={[styles.iconCircle, { backgroundColor: colors.primaryLight }]}>
             <LogIn size={32} color={colors.primary} />
           </View>
-          <Text style={[styles.title, { color: colors.text }]}>С возвращением!</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t.welcomeBack || 'С возвращением!'}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Войдите, чтобы записываться на мероприятия
+            {t.loginSubtitle || 'Войдите, чтобы записываться на мероприятия'}
           </Text>
         </View>
 
-        {/* Форма */}
         <View style={styles.formSection}>
-          {/* Поле Email */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Email</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{t.email || 'Email'}</Text>
             <View
               style={[
                 styles.inputContainer,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: errors.email ? colors.error : colors.border,
-                },
+                { backgroundColor: colors.surface, borderColor: errors.email ? colors.error : colors.border },
               ]}
             >
               <Mail size={20} color={colors.textSecondary} style={styles.inputIcon} />
@@ -111,7 +96,7 @@ export default function LoginScreen() {
                   setEmail(text);
                   if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
                 }}
-                placeholder="volunteer@email.ru"
+                placeholder={t.emailPlaceholder || 'volunteer@email.ru'}
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -124,16 +109,12 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {/* Поле Пароль */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Пароль</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{t.password || 'Пароль'}</Text>
             <View
               style={[
                 styles.inputContainer,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: errors.password ? colors.error : colors.border,
-                },
+                { backgroundColor: colors.surface, borderColor: errors.password ? colors.error : colors.border },
               ]}
             >
               <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
@@ -144,15 +125,12 @@ export default function LoginScreen() {
                   setPassword(text);
                   if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
                 }}
-                placeholder="Ваш пароль"
+                placeholder={t.passwordPlaceholder || 'Ваш пароль'}
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showPassword}
                 textContentType="password"
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-              >
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
                 {showPassword ? (
                   <EyeOff size={20} color={colors.textSecondary} />
                 ) : (
@@ -165,12 +143,8 @@ export default function LoginScreen() {
             )}
           </View>
 
-          {/* Кнопка входа */}
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-              { backgroundColor: loading ? colors.primary + '80' : colors.primary },
-            ]}
+            style={[styles.submitButton, { backgroundColor: loading ? colors.primary + '80' : colors.primary }]}
             onPress={handleLogin}
             disabled={loading}
             activeOpacity={0.8}
@@ -178,14 +152,13 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>Войти</Text>
+              <Text style={styles.submitButtonText}>{t.loginButton || 'Войти'}</Text>
             )}
           </TouchableOpacity>
 
-          {/* Ссылка на регистрацию */}
           <View style={styles.registerLink}>
             <Text style={[styles.registerText, { color: colors.textSecondary }]}>
-              Нет аккаунта?{' '}
+              {t.noAccount || 'Нет аккаунта?'}{' '}
             </Text>
             <TouchableOpacity
               onPress={() => {
@@ -194,7 +167,7 @@ export default function LoginScreen() {
               }}
             >
               <Text style={[styles.registerLinkText, { color: colors.primary }]}>
-                Зарегистрироваться
+                {t.registerButton || 'Зарегистрироваться'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -205,96 +178,23 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  headerSection: {
-    alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 40,
-  },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  formSection: {
-    gap: 16,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    height: 50,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    height: '100%',
-  },
-  eyeButton: {
-    padding: 6,
-  },
-  errorText: {
-    fontSize: 12,
-    marginLeft: 4,
-    marginTop: 2,
-  },
-  submitButton: {
-    height: 52,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  registerLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  registerText: {
-    fontSize: 14,
-  },
-  registerLinkText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  headerSection: { alignItems: 'center', marginTop: 30, marginBottom: 40 },
+  iconCircle: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: '800', marginBottom: 6 },
+  subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  formSection: { gap: 16 },
+  inputGroup: { gap: 6 },
+  label: { fontSize: 14, fontWeight: '600', marginLeft: 4 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, height: 50 },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 16, height: '100%' },
+  eyeButton: { padding: 6 },
+  errorText: { fontSize: 12, marginLeft: 4, marginTop: 2 },
+  submitButton: { height: 52, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  submitButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700' },
+  registerLink: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  registerText: { fontSize: 14 },
+  registerLinkText: { fontSize: 14, fontWeight: '600' },
 });

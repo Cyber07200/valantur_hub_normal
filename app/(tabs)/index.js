@@ -1,8 +1,7 @@
 // app/(tabs)/index.js
 import React, { useEffect, useCallback, useRef } from 'react';
 import {
-  View, FlatList, StyleSheet, RefreshControl, ActivityIndicator, Text,
-  Animated, TouchableOpacity,
+  View, FlatList, StyleSheet, RefreshControl, ActivityIndicator, Text, Animated,
 } from 'react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useEventStore } from '../../src/stores/eventStore';
@@ -12,6 +11,7 @@ import EventCard from '../../src/components/EventCard';
 import EmptyState from '../../src/components/EmptyState';
 import { Search } from 'lucide-react-native';
 import { useTranslation } from '../../src/i18n/I18nContext';
+import { safeHaptic } from '../../src/utils/platform';
 
 const CARD_HEIGHT = 190;
 
@@ -29,14 +29,15 @@ export default function EventsScreen() {
   const searchTimer = useRef(null);
   const initialLoadDone = useRef(false);
 
-  // Пружинная анимация при достижении конца
+  // Анимация пружины при достижении конца
   const bounceAnim = useRef(new Animated.Value(1)).current;
-  const triggerBounce = () => {
+  const triggerBounce = useCallback(() => {
+    safeHaptic('medium'); // тактильная отдача
     Animated.sequence([
       Animated.timing(bounceAnim, { toValue: 1.05, duration: 150, useNativeDriver: true }),
       Animated.spring(bounceAnim, { toValue: 1, friction: 4, tension: 60, useNativeDriver: true }),
     ]).start();
-  };
+  }, [bounceAnim]);
 
   useEffect(() => {
     if (!initialLoadDone.current) {
@@ -57,9 +58,9 @@ export default function EventsScreen() {
     if (!loading && hasMore && events.length > 0) {
       loadMore();
     } else if (!hasMore && events.length > 0) {
-      triggerBounce();   // <-- желейный отскок при попытке скролла дальше
+      triggerBounce(); // жесткий отскок без загрузки
     }
-  }, [loading, hasMore, events.length, loadMore]);
+  }, [loading, hasMore, events.length, loadMore, triggerBounce]);
 
   const renderEvent = useCallback(({ item }) => <EventCard event={item} />, []);
   const keyExtractor = useCallback((item) => String(item.id), []);
@@ -72,7 +73,7 @@ export default function EventsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Волонтер </Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Volunteer </Text>
           <Text style={[styles.headerTitle, { color: colors.primary }]}>Hub</Text>
         </View>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
@@ -82,11 +83,7 @@ export default function EventsScreen() {
 
       <View style={styles.searchRow}>
         <View style={styles.searchBarWrapper}>
-          <SearchBar
-            value={filters.search}
-            onChangeText={handleSearchChange}
-            placeholder={t.searchPlaceholder}
-          />
+          <SearchBar value={filters.search} onChangeText={handleSearchChange} placeholder={t.searchPlaceholder} />
         </View>
         <FilterSheet />
       </View>
@@ -105,8 +102,8 @@ export default function EventsScreen() {
           getItemLayout={getItemLayout}
           updateCellsBatchingPeriod={50}
           onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          // ListFooterComponent теперь только индикатор загрузки (без текста)
+          onEndReachedThreshold={0.3}
+          // Футер только с индикатором загрузки, без текста
           ListFooterComponent={
             loading && events.length > 0 ? (
               <View style={styles.footerLoader}>

@@ -38,13 +38,11 @@ export function useBookings() {
     }
 
     // Сохраняем функцию обновления глобально, чтобы другие компоненты могли вызвать её
-    global.refreshBookings = loadBookings;
-
-    return () => {
-      mountedRef.current = false;
-      global.refreshBookings = null;
-    };
-  }, [userId, loadBookings]);
+     global.refreshBookings = loadBookings;
+  return () => {
+    global.refreshBookings = null;
+  };
+}, [userId, loadBookings]);
 
   const handleBookEvent = async (eventId) => {
     if (!userId) return { success: false, message: 'Нужно войти' };

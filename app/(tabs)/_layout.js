@@ -98,7 +98,7 @@ function JellyIcon({ isActive, children }) {
 }
 
 // ============================================
-// КАСТОМНАЯ ТАБ-БАР (МАТОВОЕ СТЕКЛО)
+// КАСТОМНАЯ ТАБ-БАР (БЕЗ ПРОЗРАЧНОСТИ)
 // ============================================
 function CustomTabBar({ state, descriptors, navigation }) {
   const { colors } = useTheme();
@@ -126,8 +126,8 @@ function CustomTabBar({ state, descriptors, navigation }) {
     <View style={[
       styles.tabBarContainer,
       {
-        backgroundColor: colors.surface + 'CC',   // полупрозрачный фон (матовое стекло)
-        borderTopColor: 'transparent',            // убираем линию сверху
+        backgroundColor: colors.surface,         // сплошной цвет
+        borderTopColor: colors.border || 'rgba(128,128,128,0.2)',
       }
     ]}>
       <View style={styles.topLine}>
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    borderTopWidth: 0,                // убрали границу
+    borderTopWidth: StyleSheet.hairlineWidth,   // тонкая линия сверху
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,

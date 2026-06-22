@@ -5,38 +5,21 @@ import { X, CheckCircle, XCircle, Bell, MapPin, Clock } from 'lucide-react-nativ
 import { useTheme } from '../theme/ThemeProvider';
 
 const { width } = Dimensions.get('window');
-const NOTIFICATION_WIDTH = width - 40;
 
 export default function InAppNotification({ visible, type, title, message, details, onClose, duration = 4000 }) {
-  const { colors } = useTheme();
+  const { colors } = useTheme();   // ← теперь используем тему
   const translateY = useRef(new Animated.Value(-120)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     if (visible) {
-      // Появление
       Animated.parallel([
-        Animated.spring(translateY, {
-          toValue: 0,
-          friction: 6,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          friction: 6,
-          tension: 40,
-          useNativeDriver: true,
-        }),
+        Animated.spring(translateY, { toValue: 0, friction: 6, tension: 40, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 6, tension: 40, useNativeDriver: true }),
       ]).start();
 
-      // Авто-скрытие
       const timer = setTimeout(() => hideNotification(), duration);
       return () => clearTimeout(timer);
     }
@@ -44,21 +27,9 @@ export default function InAppNotification({ visible, type, title, message, detai
 
   const hideNotification = () => {
     Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -120,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 0.8,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+      Animated.timing(translateY, { toValue: -120, duration: 300, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 0.8, duration: 300, useNativeDriver: true }),
     ]).start(() => onClose());
   };
 
@@ -66,34 +37,10 @@ export default function InAppNotification({ visible, type, title, message, detai
 
   const getStyle = () => {
     switch (type) {
-      case 'success':
-        return {
-          bg: '#4CAF50',
-          icon: CheckCircle,
-          iconColor: '#FFFFFF',
-          accentBg: 'rgba(255,255,255,0.15)',
-        };
-      case 'error':
-        return {
-          bg: '#FF5252',
-          icon: XCircle,
-          iconColor: '#FFFFFF',
-          accentBg: 'rgba(255,255,255,0.15)',
-        };
-      case 'info':
-        return {
-          bg: '#6366F1',
-          icon: Bell,
-          iconColor: '#FFFFFF',
-          accentBg: 'rgba(255,255,255,0.15)',
-        };
-      default:
-        return {
-          bg: '#6366F1',
-          icon: Bell,
-          iconColor: '#FFFFFF',
-          accentBg: 'rgba(255,255,255,0.15)',
-        };
+      case 'success': return { bg: '#4CAF50', icon: CheckCircle, iconColor: '#FFFFFF', accentBg: 'rgba(255,255,255,0.15)' };
+      case 'error': return { bg: '#FF5252', icon: XCircle, iconColor: '#FFFFFF', accentBg: 'rgba(255,255,255,0.15)' };
+      case 'info': return { bg: colors.primary, icon: Bell, iconColor: '#FFFFFF', accentBg: 'rgba(255,255,255,0.15)' };
+      default: return { bg: colors.primary, icon: Bell, iconColor: '#FFFFFF', accentBg: 'rgba(255,255,255,0.15)' };
     }
   };
 
@@ -101,31 +48,18 @@ export default function InAppNotification({ visible, type, title, message, detai
   const Icon = style.icon;
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          backgroundColor: style.bg,
-          transform: [
-            { translateY },
-            { scale },
-          ],
-          opacity,
-        },
-      ]}
-    >
+    <Animated.View style={[styles.container, {
+      backgroundColor: style.bg,
+      transform: [{ translateY }, { scale }],
+      opacity,
+    }]}>
       <View style={styles.content}>
-        {/* Иконка */}
         <View style={[styles.iconContainer, { backgroundColor: style.accentBg }]}>
           <Icon size={24} color={style.iconColor} />
         </View>
-
-        {/* Текст */}
         <View style={styles.textContainer}>
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           <Text style={styles.message} numberOfLines={2}>{message}</Text>
-          
-          {/* Детали (дата, место) */}
           {details && (
             <View style={styles.detailsRow}>
               {details.date && (
@@ -143,14 +77,10 @@ export default function InAppNotification({ visible, type, title, message, detai
             </View>
           )}
         </View>
-
-        {/* Кнопка закрыть */}
         <TouchableOpacity onPress={hideNotification} style={styles.closeButton}>
           <X size={18} color="rgba(255,255,255,0.8)" />
         </TouchableOpacity>
       </View>
-
-      {/* Прогресс-бар */}
       <View style={styles.progressContainer}>
         <NotificationProgressBar duration={duration} />
       </View>
@@ -158,35 +88,18 @@ export default function InAppNotification({ visible, type, title, message, detai
   );
 }
 
-// ============================================
-// ПРОГРЕСС-БАР (уменьшается)
-// ============================================
 function NotificationProgressBar({ duration }) {
   const progress = useRef(new Animated.Value(1)).current;
-
   useEffect(() => {
-    Animated.timing(progress, {
-      toValue: 0,
-      duration: duration,
-      useNativeDriver: false,
-    }).start();
+    Animated.timing(progress, { toValue: 0, duration: duration, useNativeDriver: false }).start();
   }, []);
-
-  const widthInterpolated = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
-
   return (
     <View style={progressStyles.track}>
-      <Animated.View style={[progressStyles.fill, { width: widthInterpolated }]} />
+      <Animated.View style={[progressStyles.fill, { width: progress.interpolate({ inputRange: [0,1], outputRange: ['0%','100%'] }) }]} />
     </View>
   );
 }
 
-// ============================================
-// ХУК ДЛЯ УПРАВЛЕНИЯ УВЕДОМЛЕНИЯМИ
-// ============================================
 export function useNotification() {
   const [notification, setNotification] = React.useState({
     visible: false,
@@ -221,9 +134,6 @@ export function useNotification() {
   };
 }
 
-// ============================================
-// СТИЛИ
-// ============================================
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

@@ -68,20 +68,20 @@ export default function BookingsScreen() {
 
     global.showAlert?.({
       type: 'error',
-      title: t.error,
-      message: `${eventTitle}\n${eventDate ? '📅 ' + eventDate + '\n' : ''}${t.confirm}?`,
-      confirmText: t.confirm,
-      cancelText: t.cancel,
+      title: t.cancelBookingTitle || 'Отменить запись?',
+      message: `${eventTitle}\n${eventDate ? '📅 ' + eventDate + '\n' : ''}${t.cancelBookingMessage || 'Вы уверены?'}`,
+      confirmText: t.cancelBookingConfirm || 'Да, отменить',
+      cancelText: t.cancelBookingCancel || 'Нет',
       onConfirm: async () => {
-  safeHaptic('success');
-  await cancelBooking(bookingId, eventId);
-  await refreshEvent(eventId);
-  if (global.refreshProfile) global.refreshProfile();
-  global.refreshBookings?.();   // ← добавить
-  if (global.showNotification) {
-    global.showNotification('error', t.error, eventTitle);
-  }
-},
+        safeHaptic('success');
+        await cancelBooking(bookingId, eventId);
+        await refreshEvent(eventId);
+        if (global.refreshProfile) global.refreshProfile();
+        global.refreshBookings?.();
+        if (global.showNotification) {
+          global.showNotification('error', t.bookingCancelled || 'Запись отменена', eventTitle);
+        }
+      },
     });
   };
 

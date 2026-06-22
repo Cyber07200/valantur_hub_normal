@@ -1,603 +1,1309 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Волонтер Хаб — Презентация</title>
-    <style>
-        :root {
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --bg: #0F0F1A;
-            --surface: #1A1A2E;
-            --text: #F0F0F5;
-            --text-secondary: #9CA3AF;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --error: #EF4444;
-            --gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Волонтер Хаб — Презентация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@500;700&family=Noto+Sans+KR:wght@500;700&family=Noto+Sans+SC:wght@500;700&family=Noto+Sans+Devanagari:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#fbf2ef;
+    --paper:#1a0e2e;
+    --paper-2:#2b1245;
+    --surface: rgba(255,255,255,0.06);
+    --surface-strong: rgba(255,255,255,0.11);
+    --blue:#5ad1e8;
+    --blue-deep:#ff8fc7;
+    --amber:#ffb454;
+    --green:#6ee7b7;
+    --red:#ff7a7a;
+    --line: rgba(255,255,255,0.16);
+    --line-soft: rgba(255,255,255,0.10);
+    --glass-shine: rgba(255,255,255,0.5);
+    --vice-1:#ff6ec7;
+    --vice-2:#ff9a5a;
+    --vice-3:#7b5cff;
+    --vice-4:#21d4c4;
+  }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+  [data-theme="dark"]{
+    --ink:#fbf2ef;
+    --paper:#150a26;
+    --paper-2:#23103d;
+    --surface: rgba(255,255,255,0.05);
+    --surface-strong: rgba(255,255,255,0.09);
+    --blue:#5ad1e8;
+    --blue-deep:#ff8fc7;
+    --amber:#ffb454;
+    --green:#6ee7b7;
+    --red:#ff7a7a;
+    --line: rgba(255,255,255,0.14);
+    --line-soft: rgba(255,255,255,0.08);
+    --vice-1:#ff5fb8;
+    --vice-2:#ff8c4a;
+    --vice-3:#6a46ff;
+    --vice-4:#19c2c9;
+  }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            overflow: hidden;
-            height: 100vh;
-            user-select: none;
-        }
+  [data-theme="light"]{
+    --ink:#241433;
+    --paper:#fbeef0;
+    --paper-2:#ffe3d6;
+    --surface: rgba(255,255,255,0.45);
+    --surface-strong: rgba(255,255,255,0.65);
+    --blue:#1a9bb8;
+    --blue-deep:#d6418f;
+    --amber:#e07a2e;
+    --green:#1f9d72;
+    --red:#d6483f;
+    --line: rgba(36,20,51,0.14);
+    --line-soft: rgba(36,20,51,0.08);
+    --vice-1:#ff8fcf;
+    --vice-2:#ffb27a;
+    --vice-3:#a98bff;
+    --vice-4:#5fe0d6;
+  }
 
-        .slides-container {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-        }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ width:100%; height:100%; background:var(--paper); font-family:'Manrope',sans-serif; overflow:hidden; }
+  body{ color:var(--ink); transition: background .5s ease, color .5s ease; }
 
-        .slide {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transform: scale(0.9);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-            padding: 60px;
-            background: var(--bg);
-        }
+  .deck{ position:relative; width:100vw; height:100vh; min-height:560px; }
 
-        .slide.active {
-            opacity: 1;
-            transform: scale(1);
-            pointer-events: all;
-        }
+  /* ---- ambient vice-city gradient mesh, sits behind every slide ---- */
+  .ambient{
+    position:fixed; inset:0; z-index:0;
+    overflow:hidden;
+    background: var(--paper);
+  }
+  .ambient::before{
+    content:"";
+    position:absolute;
+    inset:-20%;
+    background:
+      radial-gradient(38% 42% at 18% 22%, color-mix(in srgb, var(--vice-1) 55%, transparent), transparent 70%),
+      radial-gradient(46% 50% at 82% 18%, color-mix(in srgb, var(--vice-2) 50%, transparent), transparent 72%),
+      radial-gradient(50% 55% at 28% 86%, color-mix(in srgb, var(--vice-3) 55%, transparent), transparent 70%),
+      radial-gradient(40% 46% at 88% 84%, color-mix(in srgb, var(--vice-4) 45%, transparent), transparent 70%);
+    filter: blur(60px) saturate(115%);
+    animation: drift 26s ease-in-out infinite alternate;
+    opacity:.85;
+  }
+  .ambient::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--paper) 35%, transparent) 60%, var(--paper) 100%);
+    mix-blend-mode: normal;
+  }
+  .ambient .grain{
+    position:absolute; inset:0;
+    opacity:.05; mix-blend-mode:overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-        .bg-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.3;
-            animation: float 8s ease-in-out infinite;
-        }
-        .bg-orb:nth-child(1) { width: 400px; height: 400px; background: var(--primary); top: -100px; right: -100px; animation-delay: 0s; }
-        .bg-orb:nth-child(2) { width: 300px; height: 300px; background: #8B5CF6; bottom: -80px; left: -80px; animation-delay: -4s; }
-        .bg-orb:nth-child(3) { width: 200px; height: 200px; background: #EC4899; top: 50%; left: 50%; animation-delay: -2s; }
+  @keyframes drift{
+    0%   { transform: translate(0,0) rotate(0deg) scale(1); }
+    50%  { transform: translate(-3%, 2%) rotate(6deg) scale(1.08); }
+    100% { transform: translate(2%, -3%) rotate(-4deg) scale(1.04); }
+  }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -30px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.95); }
-            75% { transform: translate(10px, -10px) scale(1.05); }
-        }
+  .slide{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background: transparent;
+    opacity:0; pointer-events:none;
+    transform: translateY(28px);
+    transition: opacity .55s cubic-bezier(.22,.68,0,1), transform .55s cubic-bezier(.22,.68,0,1);
+  }
+  .slide.is-active{ opacity:1; pointer-events:all; transform:translateY(0); }
+  .slide.is-leaving-back{ transform: translateY(-22px); }
 
-        .title-slide h1 {
-            font-size: 5rem;
-            font-weight: 900;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: titlePulse 3s ease-in-out infinite;
-            margin-bottom: 20px;
-            text-align: center;
-            z-index: 1;
-        }
+  /* ================= animated title-slide particle scene ================= */
+  .sunset-scene{
+    position:absolute; inset:0; z-index:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .sunset-scene .particle{
+    position:absolute;
+    border-radius:50%;
+    opacity:.5;
+    filter: blur(.3px);
+    animation: particleFloat ease-in-out infinite;
+    will-change: transform, opacity;
+  }
 
-        @keyframes titlePulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
-        }
+  @keyframes particleFloat{
+    0%   { transform: translate(0,0) scale(1); }
+    25%  { transform: translate(var(--dx1,14px), var(--dy1,-18px)) scale(1.25); }
+    50%  { transform: translate(var(--dx2,-10px), var(--dy2,-6px)) scale(0.85); }
+    75%  { transform: translate(var(--dx1,8px), var(--dy1,16px)) scale(1.12); }
+    100% { transform: translate(0,0) scale(1); }
+  }
 
-        .author {
-            font-size: 1.5rem;
-            color: var(--text-secondary);
-            z-index: 1;
-            text-align: center;
-            letter-spacing: 2px;
-            animation: fadeInUp 1s ease-out;
-        }
+  .routes{ position:absolute; inset:0; z-index:0; opacity:.35; pointer-events:none; }
+  .routes svg{ width:100%; height:100%; }
+  .routes path{ fill:none; stroke:var(--blue-deep); stroke-width:1; opacity:.18; }
+  .routes circle{ fill:var(--amber); opacity:.4; }
 
-        .subtitle-line {
-            width: 120px;
-            height: 4px;
-            background: var(--gradient);
-            border-radius: 2px;
-            margin: 20px auto;
-            animation: widenLine 1.5s ease-out;
-        }
+  /* ---- shared top bar across slides ---- */
+  .topbar{
+    position:relative; z-index:5;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding: clamp(18px,2.6vw,30px) clamp(24px,4vw,56px) 0;
+    flex:none;
+  }
+  .college{ display:flex; flex-direction:column; gap:3px; }
+  .college .eyebrow{ font-size:clamp(9px,.9vw,11px); letter-spacing:.16em; text-transform:uppercase; opacity:.55; font-weight:600; color:var(--ink); }
+  .college .name{ font-size:clamp(12px,1.2vw,15px); font-weight:700; color:var(--ink); }
+  .college .group{ font-size:clamp(10px,1vw,12px); opacity:.7; font-weight:500; color:var(--ink); }
 
-        @keyframes widenLine {
-            from { width: 0; }
-            to { width: 120px; }
-        }
+  .top-right{ display:flex; align-items:center; gap:10px; }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  .icon-btn{
+    width:38px; height:38px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background: var(--surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 6px 18px rgba(0,0,0,0.18);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: border-color .2s ease, transform .15s ease, background .2s ease;
+    flex:none;
+    position:relative;
+    overflow:hidden;
+  }
+  .icon-btn:hover{ border-color:var(--blue-deep); background:var(--surface-strong); }
+  .icon-btn:active{ transform:scale(.94); }
+  .icon-btn:focus-visible{ outline:2px solid var(--blue-deep); outline-offset:2px; }
+  .icon-btn svg{ width:17px; height:17px; position:relative; z-index:2; }
 
-        h2 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 40px;
-            z-index: 1;
-            text-align: center;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  .sun-ray{ transition: opacity .25s ease; }
+  [data-theme="dark"] .sun-rays{ opacity:0; }
+  [data-theme="light"] .moon-mask{ opacity:0; }
+  .theme-icon-sun, .theme-icon-moon{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; transition: opacity .3s ease, transform .4s cubic-bezier(.22,.68,0,1); }
+  [data-theme="light"] .theme-icon-moon{ opacity:0; transform: rotate(40deg) scale(.5); }
+  [data-theme="dark"] .theme-icon-sun{ opacity:0; transform: rotate(-40deg) scale(.5); }
 
-        .cards {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-            z-index: 1;
-        }
+  .rule{
+    position:absolute; left:clamp(24px,4vw,56px); right:clamp(24px,4vw,56px);
+    top: clamp(64px, 8vw, 86px);
+    height:1px;
+    background: linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent);
+    z-index:4;
+  }
 
-        .card {
-            background: var(--surface);
-            border-radius: 20px;
-            padding: 30px;
-            width: 280px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.6s ease-out;
-        }
+  /* ---- generic body wrapper ---- */
+  .body{
+    position:relative; z-index:5;
+    flex:1;
+    display:flex; flex-direction:column;
+    padding: clamp(28px,4vw,52px) clamp(24px,4vw,56px) clamp(20px,3vw,36px);
+    overflow:hidden;
+    gap: clamp(18px,2.4vw,28px);
+  }
 
-        .card:hover {
-            transform: translateY(-8px);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
-        }
+  .kicker{
+    display:flex; align-items:center; gap:10px;
+    color:var(--blue-deep); font-size:clamp(11px,1vw,13px); font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  .kicker .dot{ width:7px; height:7px; border-radius:50%; background: linear-gradient(135deg, var(--vice-1), var(--vice-2)); box-shadow:0 0 0 4px color-mix(in srgb, var(--vice-1) 22%, transparent), 0 0 14px color-mix(in srgb, var(--vice-1) 60%, transparent); flex:none; }
 
-        .card-icon { font-size: 3rem; margin-bottom: 15px; }
-        .card h4 { font-size: 1.3rem; margin-bottom: 10px; color: var(--text); }
-        .card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+  .h-title{
+    font-size:clamp(28px,4.4vw,52px); font-weight:800; letter-spacing:-0.01em; line-height:1.05;
+    background: linear-gradient(120deg, var(--ink) 35%, var(--vice-1) 70%, var(--vice-3) 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:var(--ink);
+  }
+  .h-sub{ font-size:clamp(13px,1.2vw,16px); font-weight:500; opacity:.68; max-width:680px; color:var(--ink); }
 
-        .compare-table {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr;
-            gap: 2px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            overflow: hidden;
-            z-index: 1;
-            width: 80%;
-            max-width: 900px;
-        }
-        .compare-table div {
-            padding: 16px 20px;
-            background: var(--surface);
-            text-align: center;
-        }
-        .compare-table .header-cell {
-            background: var(--primary);
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .compare-table .label-cell {
-            text-align: left;
-            font-weight: 600;
-            color: var(--text);
-        }
-        .check { color: var(--success); font-size: 1.5rem; }
-        .cross { color: var(--error); font-size: 1.5rem; }
+  /* reveal-on-active animation for content blocks */
+  .reveal{ opacity:0; transform: translateY(16px); }
+  .slide.is-active .reveal{
+    opacity:1; transform:translateY(0);
+    transition: opacity .6s cubic-bezier(.22,.68,0,1), transform .6s cubic-bezier(.22,.68,0,1);
+  }
+  .slide.is-active .r1{ transition-delay:.05s; }
+  .slide.is-active .r2{ transition-delay:.14s; }
+  .slide.is-active .r3{ transition-delay:.23s; }
+  .slide.is-active .r4{ transition-delay:.32s; }
+  .slide.is-active .r5{ transition-delay:.4s; }
+  .slide.is-active .r6{ transition-delay:.48s; }
 
-        .tech-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            z-index: 1;
-            width: 85%;
-            max-width: 1000px;
-        }
-        .tech-item {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-        .tech-item:hover {
-            border-color: var(--primary);
-            transform: scale(1.05);
-        }
-        .tech-item .emoji { font-size: 2.5rem; margin-bottom: 10px; }
-        .tech-item .name { font-weight: 700; color: var(--text); }
-        .tech-item .desc { font-size: 0.85rem; color: var(--text-secondary); }
+  /* ================= TITLE SLIDE (slide 0 — kept as-is) ================= */
+  .title-hero{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 24px; gap:clamp(18px,2.6vw,28px); }
+  .title-stage{ position:relative; width:min(94vw,1180px); height:clamp(86px,13vw,150px); display:flex; align-items:center; justify-content:center; }
+  .title-slot{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:800; line-height:1; color:var(--ink); font-size:clamp(34px,6.4vw,92px); letter-spacing:-0.01em; opacity:0; transform:translateY(18px) scale(.94); filter:blur(6px); white-space:nowrap; }
+  .title-slot.is-tactive{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); transition:opacity .62s cubic-bezier(.22,.68,0,1.1), transform .62s cubic-bezier(.22,.68,0,1.1), filter .5s ease; }
+  .title-slot.is-tleaving{ opacity:0; transform:translateY(-14px) scale(.97); filter:blur(4px); transition:opacity .38s ease, transform .38s ease, filter .38s ease; }
 
-        .ideas-list {
-            text-align: left;
-            z-index: 1;
-            max-width: 700px;
-        }
-        .ideas-list li {
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            list-style: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .ideas-list li::before { content: '💡'; font-size: 1.5rem; }
+  /* Per-script font stacks: web font first, then broad system fallbacks so CJK/Devanagari
+     never render as invisible/missing glyphs if the web font is slow or blocked. */
+  .title-slot[data-lang="ja"]{ font-family:'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; font-weight:700; }
+  .title-slot[data-lang="ko"]{ font-family:'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; font-weight:700; }
+  .title-slot[data-lang="zh"]{ font-family:'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'SimHei', sans-serif; font-weight:700; }
+  .title-slot[data-lang="hi"]{ font-family:'Noto Sans Devanagari', 'Nirmala UI', 'Mangal', sans-serif; font-weight:700; }
+  .lang-dots{ display:flex; gap:7px; margin-top:2px; }
+  .lang-dots span{ width:6px; height:6px; border-radius:50%; background:var(--ink); opacity:.16; transition:opacity .3s ease, transform .3s ease, background .3s ease; }
+  .lang-dots span.is-tactive{ opacity:1; background:var(--blue-deep); transform:scale(1.25); }
+  .footer{ position:relative; z-index:5; display:flex; align-items:flex-end; justify-content:space-between; padding:0 clamp(24px,4vw,56px) clamp(22px,3.2vw,40px); flex:none; }
+  .author{ display:flex; flex-direction:column; gap:3px; }
+  .author .label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.5; font-weight:600; color:var(--ink); }
+  .author .name{ font-size:clamp(15px,1.6vw,19px); font-weight:700; color:var(--ink); }
+  .meta{ text-align:right; display:flex; flex-direction:column; gap:3px; }
+  .meta .label{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.5; font-weight:600; color:var(--ink); }
+  .meta .value{ font-size:clamp(13px,1.3vw,15px); font-weight:600; color:var(--blue-deep); }
+  .footer-rule{ position:absolute; left:clamp(24px,4vw,56px); right:clamp(24px,4vw,56px); bottom:clamp(78px,9.4vw,104px); height:1px; background:linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent); z-index:4; }
+  .lang-control{ display:flex; align-items:center; gap:10px; }
+  .lang-tag{ font-size:12px; font-weight:600; letter-spacing:.04em; opacity:.5; min-width:74px; text-align:right; color:var(--ink); }
+  .pause-btn{ display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%); box-shadow: inset 0 1px 0 var(--glass-shine), 0 6px 18px rgba(0,0,0,0.16); color:var(--ink); font-family:inherit; font-size:13px; font-weight:600; padding:9px 16px; border-radius:999px; cursor:pointer; transition:border-color .2s ease, background .2s ease, transform .15s ease; }
+  .pause-btn:hover{ border-color:var(--blue-deep); background:var(--surface-strong); }
+  .pause-btn:active{ transform:scale(.97); }
+  .pause-btn:focus-visible{ outline:2px solid var(--blue-deep); outline-offset:2px; }
+  .pause-btn .icon{ width:14px; height:14px; position:relative; flex:none; }
+  .pause-btn .icon .bar{ position:absolute; top:0; bottom:0; width:4px; background:var(--ink); border-radius:1px; transition:opacity .15s ease; }
+  .pause-btn .icon .bar:first-child{ left:0; } .pause-btn .icon .bar:last-child{ left:8px; }
+  .pause-btn .icon .play{ position:absolute; inset:0; opacity:0; transition:opacity .15s ease; }
+  .pause-btn .icon .play svg{ width:14px; height:14px; }
+  .pause-btn.is-paused .icon .bar{ opacity:0; } .pause-btn.is-paused .icon .play{ opacity:1; }
+  .play-svg-fill{ fill: var(--ink); }
 
-        .quote-slide {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            gap: 60px;
-            padding: 60px 100px;
-            z-index: 1;
-            width: 100%;
-        }
-        .quote-photo {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--primary);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-            background: #333;
-            flex-shrink: 0;
-        }
-        .quote-text-block { flex: 1; }
-        .quote-text {
-            font-size: 2rem;
-            font-style: italic;
-            color: var(--text);
-            line-height: 1.4;
-        }
-        .quote-author {
-            margin-top: 20px;
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            font-style: normal;
-            font-weight: 600;
-        }
+  /* ================= reusable: cards grid ================= */
+  .cards-grid{ display:grid; gap:clamp(14px,1.8vw,20px); flex:1; align-content:center; }
+  .cards-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+  .cards-grid.cols-4{ grid-template-columns:repeat(4,1fr); }
 
-        .diagram-placeholder {
-            width: 80%;
-            height: 60%;
-            background: var(--surface);
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            z-index: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        .diagram-placeholder img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        .diagram-placeholder .icon { font-size: 3rem; margin-bottom: 20px; }
-        .diagram-label {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: var(--primary);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            z-index: 2;
-        }
+  .card{
+    background: var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:20px;
+    padding: clamp(18px,2vw,26px);
+    display:flex; flex-direction:column; gap:10px;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 10px 30px rgba(0,0,0,0.16);
+    transition: border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{ border-color:var(--blue-deep); transform:translateY(-4px); background:var(--surface-strong); box-shadow: inset 0 1px 0 var(--glass-shine), 0 16px 40px rgba(0,0,0,0.22); }
+  .card .glyph{ font-size:clamp(22px,2.4vw,30px); line-height:1; }
+  .card h4{ font-size:clamp(15px,1.4vw,18px); font-weight:700; color:var(--ink); }
+  .card p{ font-size:clamp(12.5px,1.1vw,14px); opacity:.66; line-height:1.5; color:var(--ink); }
 
-        .nav {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            z-index: 100;
-        }
-        .nav button {
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            border: 2px solid rgba(255,255,255,0.2);
-            background: var(--surface);
-            color: var(--text);
-            font-size: 1.3rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .nav button:hover {
-            border-color: var(--primary);
-            background: var(--primary-dark);
-        }
-        .nav button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .nav .dots {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 20px;
-        }
-        .nav .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 5px;
-            background: rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-        }
-        .nav .dot.active {
-            background: var(--primary);
-            width: 25px;
-        }
+  /* ================= placeholder for diagrams ================= */
+  .diagram-stage{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border:1px dashed var(--line); border-radius:24px;
+    background: var(--surface);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 10px 30px rgba(0,0,0,0.16);
+    position:relative; overflow:hidden; gap:14px;
+    min-height: 0;
+  }
+  .diagram-stage img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .diagram-tag{
+    position:absolute; top:18px; left:18px;
+    background: linear-gradient(135deg, var(--vice-1), var(--vice-3));
+    color:#fff;
+    font-size:12px; font-weight:700; letter-spacing:.04em;
+    padding:7px 14px; border-radius:999px; z-index:2;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  }
+  .diagram-icon{ font-size:34px; opacity:.45; }
+  .diagram-hint{ font-size:13px; opacity:.45; font-weight:600; letter-spacing:.02em; color:var(--ink); }
 
-        .counter {
-            position: fixed;
-            top: 30px;
-            right: 40px;
-            font-size: 1rem;
-            color: var(--text-secondary);
-            z-index: 100;
-        }
+  /* ================= compare table ================= */
+  .ctable{ flex:0 1 auto; display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:20px; overflow:hidden; backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); box-shadow: inset 0 1px 0 var(--glass-shine), 0 10px 30px rgba(0,0,0,0.16); }
+  .ctable .crow{ display:grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; }
+  .ctable .crow + .crow{ border-top:1px solid var(--line-soft); }
+  .ctable .ccell{ padding: clamp(10px,1.2vw,16px); display:flex; align-items:center; justify-content:center; font-size:clamp(11.5px,1vw,13.5px); color:var(--ink); gap:8px; flex-direction:column; }
+  .ctable .crow.head .ccell{ background: linear-gradient(135deg, var(--vice-1), var(--vice-3)); color:#fff; font-weight:700; font-size:clamp(11.5px,1.05vw,13.5px); flex-direction:column; gap:6px; }
+  .ctable .ccell.label{ justify-content:flex-start; font-weight:600; flex-direction:row; }
+  .ctable .crow:not(.head):nth-child(odd) .ccell{ background: var(--surface); }
+  .clogo{
+    width:30px; height:30px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; letter-spacing:-0.02em;
+    color:#fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    flex:none;
+  }
+  .clogo-us{ background: linear-gradient(135deg, #fff, rgba(255,255,255,.7)); color: var(--vice-3); }
+  .clogo-dobro{ background: linear-gradient(135deg, #ff8a3d, #e0512f); }
+  .clogo-vm{ background: linear-gradient(135deg, #2f8f5b, #1c6b42); }
+  .clogo-id{ background: linear-gradient(135deg, #2f6fd6, #1d4ea3); }
+  .yes{ color:var(--green); font-weight:800; font-size:16px; }
+  .no{ color:var(--red); font-weight:800; font-size:16px; opacity:.7; }
 
-        @media (max-width: 768px) {
-            .slide { padding: 30px; }
-            h1 { font-size: 3rem !important; }
-            h2 { font-size: 2rem !important; }
-            .tech-grid { grid-template-columns: repeat(2, 1fr); }
-            .compare-table { font-size: 0.8rem; }
-            .quote-slide { flex-direction: column; gap: 30px; padding: 30px; }
-            .quote-photo { width: 200px; height: 200px; }
-            .quote-text { font-size: 1.5rem; text-align: center; }
-        }
-    </style>
+  /* ================= tech grid ================= */
+  .tech-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(10px,1.4vw,16px); flex:1; align-content:center; }
+  .tech-item{ background:var(--surface); border:1px solid var(--line-soft); border-radius:18px; padding:clamp(14px,1.6vw,20px); text-align:center; display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); box-shadow: inset 0 1px 0 var(--glass-shine), 0 8px 22px rgba(0,0,0,0.14); transition:border-color .2s ease, transform .2s ease, background .2s ease; }
+  .tech-item:hover{ border-color:var(--blue-deep); transform:scale(1.04); background:var(--surface-strong); }
+  .tech-item .emoji{ font-size:clamp(20px,2.2vw,28px); }
+  .tech-item .name{ font-weight:700; font-size:clamp(12.5px,1.1vw,14px); color:var(--ink); }
+  .tech-item .desc{ font-size:clamp(10.5px,.95vw,12px); opacity:.6; color:var(--ink); }
+
+  /* ================= quote slide (legacy side-by-side, kept for compatibility) ================= */
+  .quote-wrap{ flex:1; display:flex; align-items:center; gap:clamp(28px,4vw,60px); }
+  .quote-photo{
+    width:clamp(160px,18vw,240px); height:clamp(160px,18vw,240px);
+    border-radius:50%; object-fit:cover; flex:none;
+    border:4px solid transparent;
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      linear-gradient(135deg, var(--vice-1), var(--vice-2), var(--vice-3)) border-box;
+    box-shadow: 0 20px 44px rgba(0,0,0,0.35);
+  }
+  .quote-text{ font-size:clamp(20px,2.6vw,32px); font-style:italic; line-height:1.42; color:var(--ink); }
+  .quote-author{ margin-top:18px; font-size:clamp(13px,1.2vw,16px); font-weight:700; opacity:.7; font-style:normal; color:var(--ink); }
+  .quote-mark{ font-size:clamp(40px,5vw,64px); color:var(--amber); opacity:.5; line-height:1; margin-bottom:-6px; font-style:normal; }
+
+  /* ================= quote slide (new centered, inspirational variant) ================= */
+  .quote-centered{
+    max-width:780px; margin:0 auto;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .quote-portrait{
+    width:clamp(108px,11vw,140px); height:clamp(108px,11vw,140px);
+    border-radius:50%;
+    padding:4px;
+    margin-bottom:18px;
+    background: conic-gradient(from 180deg, var(--vice-1), var(--vice-2), var(--vice-3), var(--vice-4), var(--vice-1));
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--vice-1) 12%, transparent), 0 22px 48px rgba(0,0,0,0.35);
+    animation: portraitGlow 6s ease-in-out infinite;
+  }
+  .quote-portrait .quote-photo{
+    width:100%; height:100%;
+    border:3px solid var(--paper);
+    background: var(--surface-strong);
+    box-shadow:none;
+  }
+  @keyframes portraitGlow{
+    0%, 100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--vice-1) 12%, transparent), 0 22px 48px rgba(0,0,0,0.35); }
+    50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--vice-3) 16%, transparent), 0 26px 54px rgba(0,0,0,0.4); }
+  }
+  .quote-centered .quote-mark{
+    font-size:clamp(48px,6vw,72px);
+    background: linear-gradient(135deg, var(--vice-1), var(--vice-3));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    opacity:.85; line-height:.6; margin:0 0 4px;
+  }
+  .quote-text-big{
+    font-size:clamp(22px,3vw,36px);
+    font-weight:700; font-style:italic;
+    line-height:1.38;
+    color:var(--ink);
+    max-width:720px;
+  }
+  .quote-divider{
+    width:64px; height:3px; border-radius:3px;
+    margin:18px 0 14px;
+    background: linear-gradient(90deg, var(--vice-1), var(--vice-3));
+  }
+  .quote-author-big{
+    font-size:clamp(16px,1.6vw,20px);
+    font-weight:800; letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .quote-dates{
+    font-size:clamp(12px,1.05vw,13.5px);
+    font-weight:600; opacity:.5; letter-spacing:.03em;
+    color:var(--ink);
+    margin-top:2px;
+  }
+  .quote-legacy{
+    font-size:clamp(12.5px,1.1vw,14px);
+    opacity:.62; font-weight:500;
+    margin-top:14px; max-width:480px; line-height:1.5;
+    color:var(--ink);
+  }
+
+  /* ================= ideas list ================= */
+  .ideas{ flex:1; display:flex; flex-direction:column; gap:0; max-width:760px; justify-content:center; }
+  .idea-row{ display:flex; align-items:center; gap:16px; padding:clamp(12px,1.6vw,18px) 4px; border-bottom:1px solid var(--line-soft); }
+  .idea-row:first-child{ border-top:1px solid var(--line-soft); }
+  .idea-num{ font-size:clamp(11px,1vw,13px); font-weight:800; color:var(--blue-deep); width:30px; flex:none; }
+  .idea-row p{ font-size:clamp(14px,1.3vw,17px); font-weight:600; color:var(--ink); }
+
+  /* ================= db structure ================= */
+  .db-note{ font-size:clamp(12.5px,1.1vw,14px); opacity:.55; font-weight:600; text-align:center; color:var(--ink); margin-top:4px; }
+
+  /* ================= transition-to-app slide ================= */
+  .transition-wrap{
+    flex:1; display:flex; align-items:center; gap:clamp(36px,5vw,72px);
+    max-width:1180px; margin:0 auto; width:100%;
+  }
+  .transition-media{ flex:none; display:flex; align-items:center; justify-content:center; }
+  .phone-frame{
+    width:clamp(180px,20vw,250px);
+    height:clamp(370px,41vw,510px);
+    border-radius:36px;
+    border: 6px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    background: var(--surface);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 24px 60px rgba(0,0,0,0.3);
+    overflow:hidden;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .phone-frame img{ width:100%; height:100%; object-fit:cover; }
+  .phone-fallback{
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:12px; padding:20px; text-align:center;
+    position:absolute; inset:0;
+  }
+  .transition-text{ flex:1; display:flex; flex-direction:column; gap:14px; }
+  .transition-text .kicker{ margin-bottom:2px; }
+  .transition-text .h-sub{ max-width:520px; opacity:.72; }
+
+  @media (max-width:900px){
+    .transition-wrap{ flex-direction:column; text-align:center; gap:28px; }
+    .transition-text{ align-items:center; }
+    .transition-text .kicker, .transition-text .h-title, .transition-text .h-sub{ text-align:center !important; }
+  }
+
+  /* ================= intro slide: actuality/object/subject/goal/tasks ================= */
+  .intro-grid{
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap:clamp(10px,1.3vw,14px);
+  }
+  .intro-block{
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:16px;
+    padding:clamp(12px,1.4vw,16px) clamp(14px,1.6vw,18px);
+    display:flex; flex-direction:column; gap:6px;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 8px 22px rgba(0,0,0,0.14);
+    transition:border-color .25s ease, background .25s ease;
+  }
+  .intro-block:hover{ border-color:var(--blue-deep); }
+  .intro-block--accent{
+    background: linear-gradient(135deg, color-mix(in srgb, var(--vice-1) 22%, var(--surface)), color-mix(in srgb, var(--vice-3) 22%, var(--surface)));
+    border-color: color-mix(in srgb, var(--vice-1) 40%, var(--line-soft));
+  }
+  .intro-label{
+    font-size:clamp(10.5px,.95vw,12px); font-weight:800;
+    letter-spacing:.1em; text-transform:uppercase;
+    color:var(--blue-deep);
+  }
+  .intro-block p{ font-size:clamp(12px,1.05vw,13.5px); line-height:1.46; opacity:.78; color:var(--ink); }
+
+  .intro-tasks{
+    border-top:1px solid var(--line-soft);
+    padding-top:clamp(12px,1.6vw,16px);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .tasks-list{
+    list-style:none; counter-reset: task;
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap: 6px clamp(20px,2.6vw,32px);
+  }
+  .tasks-list li{
+    counter-increment: task;
+    position:relative;
+    padding-left:28px;
+    font-size:clamp(11.5px,1vw,13px);
+    line-height:1.4;
+    opacity:.82;
+    font-weight:500;
+    color:var(--ink);
+  }
+  .tasks-list li::before{
+    content: counter(task, decimal-leading-zero);
+    position:absolute; left:0; top:0;
+    font-size:10px; font-weight:800;
+    color:var(--blue-deep);
+    opacity:.7;
+  }
+
+  /* ================= nav ================= */
+  .nav{ position:fixed; bottom:26px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; z-index:100; }
+  .nav button.arrow{
+    width:44px; height:44px; border-radius:999px;
+    border:1px solid var(--line);
+    background: var(--surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 8px 22px rgba(0,0,0,0.22);
+    color:var(--ink); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .2s ease, transform .15s ease, opacity .2s ease, background .2s ease;
+  }
+  .nav button.arrow:hover{ border-color:var(--blue-deep); background:var(--surface-strong); }
+  .nav button.arrow:active{ transform:scale(.93); }
+  .nav button.arrow:disabled{ opacity:.3; cursor:default; }
+  .nav .dots{
+    display:flex; align-items:center; gap:7px; padding:0 16px;
+    height:44px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background: var(--surface);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: inset 0 1px 0 var(--glass-shine), 0 8px 22px rgba(0,0,0,0.22);
+  }
+  .nav .dots span{ width:6px; height:6px; border-radius:50%; background:var(--ink); opacity:.22; cursor:pointer; transition: all .25s ease; }
+  .nav .dots span.is-on{ opacity:1; background: linear-gradient(135deg, var(--vice-1), var(--vice-3)); width:20px; border-radius:4px; }
+
+  .counter{ position:fixed; top:24px; right: 86px; font-size:12px; font-weight:700; letter-spacing:.06em; opacity:.45; z-index:100; color:var(--ink); }
+
+  /* ================= ripple theme transition overlay ================= */
+  .ripple{
+    position:fixed; border-radius:50%;
+    pointer-events:none; z-index:9999;
+    transform: translate(-50%,-50%) scale(0);
+    will-change: transform;
+  }
+
+  @media (max-width:900px){
+    .cards-grid.cols-3, .cards-grid.cols-4{ grid-template-columns:repeat(2,1fr); }
+    .tech-grid{ grid-template-columns:repeat(2,1fr); }
+    .ctable .crow{ grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr; font-size:10px; }
+    .quote-wrap{ flex-direction:column; text-align:center; gap:20px; }
+    .footer{ flex-direction:column; align-items:flex-start; gap:12px; }
+    .meta{ text-align:left; }
+    .intro-grid{ grid-template-columns:1fr; }
+    .tasks-list{ grid-template-columns:1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .slide, .reveal, .title-slot, .ripple{ transition:none !important; }
+  }
+</style>
 </head>
-<body>
+<body data-theme="dark">
 
-<div class="slides-container">
+<div class="ambient" aria-hidden="true"><div class="grain"></div></div>
 
-    <!-- Слайд 1: Титульный -->
-    <div class="slide title-slide active" data-index="0">
-        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
-        <h1>Волонтер Хаб</h1>
-        <div class="subtitle-line"></div>
-        <p style="font-size:1.4rem; color: var(--text-secondary); z-index:1; margin-bottom:8px;">Кроссплатформенное приложение для волонтеров</p>
-        <p class="author">Абросимов Максим Романович</p>
+<div class="deck" id="deck">
+
+  <!-- ============ SLIDE 0 — TITLE (unchanged design) ============ -->
+  <section class="slide is-active" data-index="0">
+    <div class="sunset-scene" aria-hidden="true">
+      <span class="particle" style="left:62.2%; top:6.2%; width:5px; height:5px; background:var(--vice-2); animation-duration:10.6s; animation-delay:-3.2s; --dx1:-17px; --dy1:-10px; --dx2:-8px; --dy2:-12px;"></span>
+      <span class="particle" style="left:69.2%; top:65.7%; width:6px; height:6px; background:var(--vice-2); animation-duration:12.1s; animation-delay:-8.7s; --dx1:-19px; --dy1:-18px; --dx2:9px; --dy2:-16px;"></span>
+      <span class="particle" style="left:34.6%; top:12.2%; width:3px; height:3px; background:var(--vice-3); animation-duration:14.9s; animation-delay:-4.8s; --dx1:-19px; --dy1:-22px; --dx2:7px; --dy2:14px;"></span>
+      <span class="particle" style="left:60.3%; top:79.8%; width:8px; height:8px; background:var(--vice-2); animation-duration:13.9s; animation-delay:-11.5s; --dx1:-19px; --dy1:-20px; --dx2:-10px; --dy2:12px;"></span>
+      <span class="particle" style="left:37.2%; top:36.6%; width:4px; height:4px; background:var(--vice-3); animation-duration:13.9s; animation-delay:-3.8s; --dx1:-17px; --dy1:-16px; --dx2:-8px; --dy2:9px;"></span>
+      <span class="particle" style="left:88.2%; top:64.6%; width:4px; height:4px; background:var(--vice-3); animation-duration:14.9s; animation-delay:-2.7s; --dx1:-20px; --dy1:15px; --dx2:-8px; --dy2:8px;"></span>
+      <span class="particle" style="left:49.4%; top:81.9%; width:6px; height:6px; background:var(--vice-2); animation-duration:10.9s; animation-delay:-9.0s; --dx1:19px; --dy1:21px; --dx2:10px; --dy2:-11px;"></span>
+      <span class="particle" style="left:12.3%; top:8.1%; width:3px; height:3px; background:var(--vice-2); animation-duration:13.4s; animation-delay:-2.5s; --dx1:17px; --dy1:15px; --dx2:11px; --dy2:-13px;"></span>
+      <span class="particle" style="left:14.4%; top:81.9%; width:5px; height:5px; background:var(--vice-3); animation-duration:9.8s; animation-delay:-6.8s; --dx1:10px; --dy1:22px; --dx2:-11px; --dy2:-15px;"></span>
+      <span class="particle" style="left:31.2%; top:60.2%; width:8px; height:8px; background:var(--vice-2); animation-duration:10.1s; animation-delay:-2.8s; --dx1:-17px; --dy1:10px; --dx2:15px; --dy2:8px;"></span>
+      <span class="particle" style="left:25.9%; top:53.9%; width:3px; height:3px; background:var(--vice-1); animation-duration:14.1s; animation-delay:-2.2s; --dx1:-12px; --dy1:21px; --dx2:-9px; --dy2:16px;"></span>
+      <span class="particle" style="left:88.5%; top:70.5%; width:4px; height:4px; background:var(--vice-3); animation-duration:11.8s; animation-delay:-3.9s; --dx1:15px; --dy1:11px; --dx2:-7px; --dy2:-12px;"></span>
+      <span class="particle" style="left:24.9%; top:23.4%; width:3px; height:3px; background:var(--vice-1); animation-duration:10.6s; animation-delay:-1.1s; --dx1:11px; --dy1:-13px; --dx2:8px; --dy2:-13px;"></span>
+      <span class="particle" style="left:84.3%; top:54.7%; width:4px; height:4px; background:var(--vice-4); animation-duration:14.7s; animation-delay:-9.7s; --dx1:-18px; --dy1:15px; --dx2:15px; --dy2:-13px;"></span>
+      <span class="particle" style="left:93.6%; top:12.7%; width:6px; height:6px; background:var(--vice-3); animation-duration:14.6s; animation-delay:-10.7s; --dx1:-12px; --dy1:12px; --dx2:-9px; --dy2:-15px;"></span>
+      <span class="particle" style="left:10.9%; top:75.1%; width:8px; height:8px; background:var(--vice-1); animation-duration:9.4s; animation-delay:-0.0s; --dx1:-22px; --dy1:-12px; --dx2:11px; --dy2:15px;"></span>
+    </div>
+    <div class="routes" aria-hidden="true">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <path d="M -50 620 C 150 560, 280 700, 460 600 S 760 460, 980 540 S 1250 480, 1320 420" />
+        <path d="M -80 220 C 120 300, 260 160, 480 240 S 740 340, 960 220 S 1180 140, 1300 200" />
+        <circle cx="460" cy="600" r="4.5"></circle>
+        <circle cx="980" cy="540" r="3.5"></circle>
+        <circle cx="480" cy="240" r="3.5"></circle>
+        <circle cx="960" cy="220" r="4.5"></circle>
+      </svg>
     </div>
 
-    <!-- Слайд 2: IDEF0 A0 -->
-    <div class="slide" data-index="1">
-        <div class="bg-orb"></div>
-        <h2>Диаграмма IDEF0 — Уровень A0</h2>
-        <div class="diagram-placeholder">
-            <span class="diagram-label">IDEF0 A0</span>
-            <img src="idef0_A0.png" alt="IDEF0 A0">
+    <div class="topbar">
+      <div class="college">
+        <span class="eyebrow">СПб ГБ ПОУ</span>
+        <span class="name">Охтинский колледж</span>
+        <span class="group">Группа 491 · Специальность 09.02.07</span>
+      </div>
+      <div class="lang-control">
+        <span class="lang-tag" id="langTag">Русский</span>
+        <button class="pause-btn" id="pauseBtn" type="button" aria-pressed="false">
+          <span class="icon">
+            <span class="bar"></span><span class="bar"></span>
+            <span class="play"><svg viewBox="0 0 14 14" fill="none"><path class="play-svg-fill" d="M3 1.5L12 7L3 12.5V1.5Z"/></svg></span>
+          </span>
+          <span class="pause-label">Остановить на русском</span>
+        </button>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Переключить тему">
+          <span class="theme-icon-sun">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path class="sun-ray" d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          </span>
+          <span class="theme-icon-moon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer-rule"></div>
+
+    <div class="title-hero">
+      <div class="kicker"><span class="dot"></span> Итоговая квалификационная работа</div>
+      <div class="title-stage" id="titleStage" role="img" aria-label="Волонтер Хаб"></div>
+      <div class="lang-dots" id="langDots"></div>
+      <p class="h-sub">Мобильное приложение для поиска и записи на волонтёрские мероприятия</p>
+    </div>
+
+    <div class="footer">
+      <div class="author">
+        <span class="label">Выполнил студент</span>
+        <span class="name">Абросимов Максим Романович</span>
+      </div>
+      <div class="meta">
+        <span class="label">Год защиты</span>
+        <span class="value">2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 1 — Актуальность, объект, предмет, цель, задачи ============ -->
+  <section class="slide" data-index="1">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Введение</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Основания исследования</div>
+      <h2 class="h-title reveal r2" style="font-size:clamp(24px,3.2vw,38px);">Актуальность, объект, предмет, цель и задачи</h2>
+
+      <div class="intro-grid reveal r3">
+        <div class="intro-block">
+          <span class="intro-label">Актуальность</span>
+          <p>Определяется социальной значимостью развития добровольчества, недостаточным уровнем цифровизации волонтёрской сферы в сегменте мобильных приложений, а также практической ценностью применения React Native, Expo Router и Supabase.</p>
         </div>
-    </div>
-
-    <!-- Слайд 3: IDEF0 A1 -->
-    <div class="slide" data-index="2">
-        <div class="bg-orb"></div>
-        <h2>Диаграмма IDEF0 — Уровень A1</h2>
-        <div class="diagram-placeholder">
-            <span class="diagram-label">IDEF0 A1</span>
-            <img src="idef0_A1.png" alt="IDEF0 A1">
+        <div class="intro-block">
+          <span class="intro-label">Объект исследования</span>
+          <p>Процесс разработки кроссплатформенных мобильных приложений с использованием современных облачных платформ и реактивных библиотек управления состоянием.</p>
         </div>
-    </div>
-
-    <!-- Слайд 4: DFD -->
-    <div class="slide" data-index="3">
-        <div class="bg-orb"></div>
-        <h2>Диаграмма потоков данных (DFD)</h2>
-        <div class="diagram-placeholder">
-            <span class="diagram-label">DFD</span>
-            <img src="DFD.png" alt="DFD">
+        <div class="intro-block">
+          <span class="intro-label">Предмет исследования</span>
+          <p>Разработка мобильного приложения «Волонтер Хаб» для поиска и записи на волонтёрские мероприятия на основе React Native, Expo Router 6, Supabase и Zustand 5.</p>
         </div>
-    </div>
-
-    <!-- Слайд 5: Use Case -->
-    <div class="slide" data-index="4">
-        <div class="bg-orb"></div>
-        <h2>Диаграмма вариантов использования (Use Case)</h2>
-        <div class="diagram-placeholder">
-            <span class="diagram-label">Use Case</span>
-            <img src="Use_case.png" alt="Use Case">
+        <div class="intro-block intro-block--accent">
+          <span class="intro-label">Цель работы</span>
+          <p>Проектирование и разработка полнофункционального мобильного приложения, обеспечивающего поиск мероприятий с фильтрацией, запись с учётом лимита участников, профиль с накоплением часов и таблицу лидеров.</p>
         </div>
-    </div>
+      </div>
 
-    <!-- Слайд 6: Цитата Стива Джобса -->
-    <div class="slide" data-index="5">
-        <div class="bg-orb"></div><div class="bg-orb"></div>
-        <div class="quote-slide">
-            <img src="steve_jobs.jpg" alt="Стив Джобс" class="quote-photo">
-            <div class="quote-text-block">
-                <p class="quote-text">«Дизайн — это не просто то, как выглядит продукт или как он ощущается. Дизайн — это то, как он работает.»</p>
-                <p class="quote-author">— Стив Джобс</p>
+      <div class="intro-tasks reveal r4">
+        <span class="intro-label">Задачи</span>
+        <ol class="tasks-list">
+          <li>провести анализ предметной области и существующих решений для волонтёров;</li>
+          <li>обосновать выбор технологического стека и сравнить альтернативные инструменты;</li>
+          <li>сформулировать требования к системе и разработать техническое задание;</li>
+          <li>спроектировать архитектуру, структуру БД и прототипы интерфейса;</li>
+          <li>реализовать клиентскую часть на React Native, Expo Router и Zustand;</li>
+          <li>настроить серверную инфраструктуру Supabase: таблицы, RLS, Storage;</li>
+          <li>провести функциональное тестирование и тестирование производительности;</li>
+          <li>подготовить документацию в соответствии с требованиями ГОСТ.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2 — IDEF0 A0 ============ -->
+  <section class="slide" data-index="2">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Системный анализ</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Функциональное моделирование</div>
+      <h2 class="h-title reveal r2">Диаграмма IDEF0 — уровень A0</h2>
+      <div class="diagram-stage reveal r3">
+  <span class="diagram-tag">IDEF0 · A0</span>
+  <img src="idef0_A0.png" alt="IDEF0 A0" style="max-width:100%; max-height:100%; object-fit:contain;">
+</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 3 — IDEF0 A1 ============ -->
+  <section class="slide" data-index="3">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Системный анализ</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Декомпозиция процессов</div>
+      <h2 class="h-title reveal r2">Диаграмма IDEF0 — уровень A1</h2>
+      <div class="diagram-stage reveal r3">
+  <span class="diagram-tag">IDEF0 · A1</span>
+  <img src="idef0_A1.png" alt="IDEF0 A1" style="max-width:100%; max-height:100%; object-fit:contain;">
+</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 4 — DFD ============ -->
+  <section class="slide" data-index="4">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Системный анализ</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Потоки данных</div>
+      <h2 class="h-title reveal r2">Диаграмма потоков данных (DFD)</h2>
+      <div class="diagram-stage reveal r3">
+  <span class="diagram-tag">DFD</span>
+  <img src="DFD.png" alt="Диаграмма потоков данных" style="max-width:100%; max-height:100%; object-fit:contain;">
+</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 5 — Анализ конкурентов ============ -->
+  <section class="slide" data-index="5">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Презентация проекта</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Конкурентная среда</div>
+      <h2 class="h-title reveal r2">Анализ конкурентов</h2>
+      <div class="ctable reveal r3">
+        <div class="crow head">
+          <div class="ccell label">Функция</div>
+          <div class="ccell"><span class="clogo clogo-us">VH</span>Волонтер Хаб</div>
+          <div class="ccell"><span class="clogo clogo-dobro">Д</span>Добро.ру</div>
+          <div class="ccell"><span class="clogo clogo-vm">VM</span>VolunteerMatch</div>
+          <div class="ccell"><span class="clogo clogo-id">id</span>Idealist</div>
+        </div>
+        <div class="crow"><div class="ccell label">Поиск мероприятий</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="yes">✓</span></div></div>
+        <div class="crow"><div class="ccell label">Учёт часов</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div></div>
+        <div class="crow"><div class="ccell label">Лидерборд</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div></div>
+        <div class="crow"><div class="ccell label">Кроссплатформенность</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="yes">✓</span></div></div>
+        <div class="crow"><div class="ccell label">Тёмная тема</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div></div>
+        <div class="crow"><div class="ccell label">Анимации интерфейса</div><div class="ccell"><span class="yes">✓</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div><div class="ccell"><span class="no">—</span></div></div>
+      </div>
+      <p class="db-note reveal r4">VolunteerMatch (США) и Idealist (США) — крупнейшие международные платформы волонтёрства</p>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 6 — Use Case ============ -->
+  <section class="slide" data-index="6">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Системный анализ</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Сценарии использования</div>
+      <h2 class="h-title reveal r2">Диаграмма вариантов использования (Use Case)</h2>
+     <div class="diagram-stage reveal r3">
+  <span class="diagram-tag">Use Case</span>
+  <img src="Use_case.png" alt="Диаграмма вариантов использования" style="max-width:100%; max-height:100%; object-fit:contain;">
+</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 6 — Quote ============ -->
+  <section class="slide" data-index="7">
+    <div class="sunset-scene" aria-hidden="true">
+      <span class="particle" style="left:10%; top:18%; width:4px; height:4px; background:var(--vice-1); animation-duration:12.4s; animation-delay:-1.8s; --dx1:12px; --dy1:-14px; --dx2:-9px; --dy2:10px;"></span>
+      <span class="particle" style="left:90%; top:22%; width:5px; height:5px; background:var(--vice-3); animation-duration:13.8s; animation-delay:-5.2s; --dx1:-14px; --dy1:13px; --dx2:9px; --dy2:-11px;"></span>
+      <span class="particle" style="left:85%; top:80%; width:4px; height:4px; background:var(--vice-2); animation-duration:11.2s; animation-delay:-3.4s; --dx1:11px; --dy1:16px; --dx2:-7px; --dy2:-9px;"></span>
+      <span class="particle" style="left:7%; top:78%; width:5px; height:5px; background:var(--vice-4); animation-duration:14.0s; animation-delay:-7.0s; --dx1:-12px; --dy1:-13px; --dx2:10px; --dy2:8px;"></span>
+    </div>
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Философия проекта</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="body" style="align-items:center; justify-content:center; text-align:center;">
+      <div class="quote-centered reveal r1">
+        <div class="quote-portrait">
+          <img class="quote-photo" src="steve_jobs.jpg" alt="Стив Джобс" onerror="this.style.display='none';">
+        </div>
+        <p class="quote-mark">"</p>
+        <p class="quote-text-big">Дизайн — это не просто то, как выглядит продукт или как он ощущается.<br>Дизайн — это то, как он работает.</p>
+        <div class="quote-divider"></div>
+        <p class="quote-author-big">Стив Джобс</p>
+        <p class="quote-dates">24 февраля 1955 — 5 октября 2011</p>
+        <p class="quote-legacy">Основатель Apple, один из самых влиятельных дизайнеров и предпринимателей XX–XXI века</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 7 — О проекте ============ -->
+  <section class="slide" data-index="8">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Презентация проекта</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Суть проекта</div>
+      <h2 class="h-title reveal r2">О проекте</h2>
+      <div class="cards-grid cols-4 reveal r3">
+        <div class="card"><div class="glyph">🎯</div><h4>Цель</h4><p>Создать единую платформу для поиска волонтёрских мероприятий и учёта часов</p></div>
+        <div class="card"><div class="glyph">📱</div><h4>Платформы</h4><p>iOS, Android, Web, Desktop — единая кодовая база на React Native</p></div>
+        <div class="card"><div class="glyph">⚡</div><h4>Стек</h4><p>Expo SDK, Supabase, Zustand, Reanimated — современные технологии</p></div>
+        <div class="card"><div class="glyph">👥</div><h4>Аудитория</h4><p>Волонтёры от 16 лет, НКО и организаторы мероприятий по всей России</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 8 — Анализ конкурентов ============ -->
+  <!-- ============ SLIDE 9 — Дизайн ============ -->
+  <section class="slide" data-index="9">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Презентация проекта</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Визуальный язык</div>
+      <h2 class="h-title reveal r2">Дизайн и UI/UX</h2>
+      <div class="cards-grid cols-4 reveal r3">
+        <div class="card"><div class="glyph">🎨</div><h4>Современный минимализм</h4><p>Спокойная палитра, скруглённые углы, мягкие тени без лишнего шума</p></div>
+        <div class="card"><div class="glyph">🌓</div><h4>Тёмная и светлая тема</h4><p>Переключение волной — как в самом приложении, с учётом системных настроек</p></div>
+        <div class="card"><div class="glyph">✨</div><h4>Желейные анимации</h4><p>Reanimated и пружинные эффекты для карточек, табов и переходов</p></div>
+        <div class="card"><div class="glyph">♿</div><h4>Доступность</h4><p>Контрастные цвета, крупные зоны нажатия, поддержка системного масштаба шрифта</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 10 — Техническая архитектура ============ -->
+  <section class="slide" data-index="10">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Техническая часть</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Технологический стек</div>
+      <h2 class="h-title reveal r2">Техническая архитектура</h2>
+      <div class="tech-grid reveal r3">
+        <div class="tech-item"><div class="emoji">⚛️</div><div class="name">React Native</div><div class="desc">Кроссплатформенный UI</div></div>
+        <div class="tech-item"><div class="emoji">📦</div><div class="name">Expo SDK</div><div class="desc">Сборка и нативные API</div></div>
+        <div class="tech-item"><div class="emoji">🗄️</div><div class="name">Supabase</div><div class="desc">PostgreSQL + Auth</div></div>
+        <div class="tech-item"><div class="emoji">🔄</div><div class="name">Expo Router</div><div class="desc">Файловая навигация</div></div>
+        <div class="tech-item"><div class="emoji">🏪</div><div class="name">Zustand</div><div class="desc">State management</div></div>
+        <div class="tech-item"><div class="emoji">🎬</div><div class="name">Reanimated</div><div class="desc">Нативные анимации</div></div>
+        <div class="tech-item"><div class="emoji">🔔</div><div class="name">Haptics</div><div class="desc">Тактильные отклики</div></div>
+        <div class="tech-item"><div class="emoji">📊</div><div class="name">Пагинация</div><div class="desc">Чанки по 10 событий</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 11 — База данных ============ -->
+  <section class="slide" data-index="11">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Техническая часть</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Хранение данных</div>
+      <h2 class="h-title reveal r2">Структура базы данных</h2>
+      <div class="cards-grid cols-3 reveal r3">
+        <div class="card"><div class="glyph">📋</div><h4>events</h4><p>Мероприятия: название, категория, город, дата, часы, места</p></div>
+        <div class="card"><div class="glyph">👤</div><h4>profiles</h4><p>Профили: имя, никнейм, телефон, био, аватар, total_hours</p></div>
+        <div class="card"><div class="glyph">📝</div><h4>bookings</h4><p>Записи: связь пользователь–мероприятие, статус, время записи</p></div>
+      </div>
+      <p class="db-note reveal r4">Политики RLS, индексы и хранимые функции для атомарного подсчёта часов</p>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 12 — ER-диаграмма ============ -->
+  <section class="slide" data-index="12">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Техническая часть</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Связи между таблицами</div>
+      <h2 class="h-title reveal r2">ER-диаграмма базы данных</h2>
+      <div class="diagram-stage reveal r3">
+  <span class="diagram-tag">ER · Supabase</span>
+  <img src="ER_diagram.png" alt="ER-диаграмма базы данных" style="max-width:100%; max-height:100%; object-fit:contain;">
+</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 13 — Ключевой функционал ============ -->
+  <section class="slide" data-index="13">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Функциональность</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Что умеет приложение</div>
+      <h2 class="h-title reveal r2">Ключевой функционал</h2>
+      <div class="cards-grid cols-3 reveal r3">
+        <div class="card"><div class="glyph">🔍</div><h4>Поиск и фильтры</h4><p>По названию, категории, городу и дате с гибкой сортировкой</p></div>
+        <div class="card"><div class="glyph">📅</div><h4>Мои записи</h4><p>Отслеживание статуса, отмена записи, начисление часов</p></div>
+        <div class="card"><div class="glyph">🏆</div><h4>Таблица лидеров</h4><p>Рейтинг волонтёров по часам с медалями за топ-места</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 13 — Особенности ============ -->
+  <section class="slide" data-index="14">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Функциональность</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Что выделяет приложение</div>
+      <h2 class="h-title reveal r2">Уникальные особенности</h2>
+      <div class="cards-grid cols-4 reveal r3">
+        <div class="card"><div class="glyph">🫧</div><h4>Желейный интерфейс</h4><p>Пружинные анимации таб-бара и переходов между экранами мероприятий</p></div>
+        <div class="card"><div class="glyph">📳</div><h4>Тактильный отклик</h4><p>Haptic feedback на ключевые нажатия — на iOS и Android</p></div>
+        <div class="card"><div class="glyph">🎯</div><h4>Умный кэш</h4><p>Повторные просмотры мероприятий открываются мгновенно</p></div>
+        <div class="card"><div class="glyph">🔐</div><h4>Безопасность данных</h4><p>RLS-политики Supabase и шифрование сессии защищают данные волонтёров</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 14 — Идеи развития ============ -->
+  <section class="slide" data-index="15">
+    <div class="topbar">
+      <div class="college"><span class="eyebrow">Волонтер Хаб</span><span class="group">Перспективы</span></div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body">
+      <div class="kicker reveal r1"><span class="dot"></span> Дальнейшее развитие</div>
+      <h2 class="h-title reveal r2">Идеи для развития</h2>
+      <div class="ideas reveal r3">
+        <div class="idea-row"><span class="idea-num">01</span><p>Система достижений и бейджей для волонтёров</p></div>
+        <div class="idea-row"><span class="idea-num">02</span><p>Чат между участниками мероприятия</p></div>
+        <div class="idea-row"><span class="idea-num">03</span><p>Интеграция с картами для построения маршрутов</p></div>
+        <div class="idea-row"><span class="idea-num">04</span><p>Push-уведомления о новых мероприятиях поблизости</p></div>
+        <div class="idea-row"><span class="idea-num">05</span><p>Геймификация: еженедельные челленджи и награды</p></div>
+        <div class="idea-row"><span class="idea-num">06</span><p>Веб-версия с поддержкой PWA для десктопа</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 15 — Переход к приложению ============ -->
+  <section class="slide" data-index="16">
+    <div class="sunset-scene" aria-hidden="true">
+      <span class="particle" style="left:8%; top:14%; width:5px; height:5px; background:var(--vice-1); animation-duration:11.4s; animation-delay:-2.1s; --dx1:14px; --dy1:-16px; --dx2:-9px; --dy2:11px;"></span>
+      <span class="particle" style="left:92%; top:20%; width:6px; height:6px; background:var(--vice-3); animation-duration:13.2s; animation-delay:-6.4s; --dx1:-16px; --dy1:14px; --dx2:10px; --dy2:-12px;"></span>
+      <span class="particle" style="left:88%; top:78%; width:4px; height:4px; background:var(--vice-2); animation-duration:10.8s; animation-delay:-4.0s; --dx1:12px; --dy1:18px; --dx2:-8px; --dy2:-10px;"></span>
+      <span class="particle" style="left:6%; top:82%; width:5px; height:5px; background:var(--vice-4); animation-duration:12.6s; animation-delay:-8.2s; --dx1:-13px; --dy1:-15px; --dx2:11px; --dy2:9px;"></span>
+    </div>
+    <div class="routes" aria-hidden="true">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <path d="M -50 620 C 150 560, 280 700, 460 600 S 760 460, 980 540 S 1250 480, 1320 420" />
+        <path d="M -80 220 C 120 300, 260 160, 480 240 S 740 340, 960 220 S 1180 140, 1300 200" />
+        <circle cx="460" cy="600" r="4.5"></circle>
+        <circle cx="980" cy="540" r="3.5"></circle>
+      </svg>
+    </div>
+    <div class="topbar">
+      <div class="college">
+        <span class="eyebrow">СПб ГБ ПОУ</span>
+        <span class="name">Охтинский колледж</span>
+        <span class="group">Группа 491 · Специальность 09.02.07</span>
+      </div>
+      <div class="top-right"></div>
+    </div>
+    <div class="rule"></div>
+    <div class="body" style="justify-content:center;">
+      <div class="transition-wrap reveal r1">
+        <div class="transition-media">
+          <div class="phone-frame">
+            <img src="app_screenshot.png" alt="Скриншот приложения Волонтер Хаб" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="phone-fallback">
+              <span class="diagram-icon">📱</span>
+              <span class="diagram-hint">Вставьте скриншот приложения<br>(app_screenshot.png)</span>
             </div>
+          </div>
         </div>
-    </div>
-
-    <!-- Слайд 7: О проекте -->
-    <div class="slide" data-index="6">
-        <div class="bg-orb"></div><div class="bg-orb"></div>
-        <h2>О проекте</h2>
-        <div class="cards">
-            <div class="card"><div class="card-icon">🎯</div><h4>Цель</h4><p>Создать единую платформу для поиска волонтерских мероприятий и учета часов</p></div>
-            <div class="card"><div class="card-icon">📱</div><h4>Платформы</h4><p>iOS, Android, Web, Desktop — единая кодовая база на React Native</p></div>
-            <div class="card"><div class="card-icon">⚡</div><h4>Стек</h4><p>Expo SDK, Supabase, Zustand, Reanimated — современные технологии</p></div>
+        <div class="transition-text">
+          <div class="kicker"><span class="dot"></span> Демонстрация работы системы</div>
+          <h1 class="h-title" style="font-size:clamp(34px,5.2vw,64px); text-align:left;">Перейдём к приложению</h1>
+          <p class="h-sub" style="text-align:left;">Далее — живой показ интерфейса «Волонтер Хаб»: поиск мероприятий, запись в одно касание, профиль с историей часов и переключение темы прямо во время демонстрации.</p>
         </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="author">
+        <span class="label">Выполнил студент</span>
+        <span class="name">Абросимов Максим Романович</span>
+      </div>
+      <div class="meta">
+        <span class="label">Год защиты</span>
+        <span class="value">2026</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 16 — Финальный (в стиле титульного) ============ -->
+  <section class="slide" data-index="17">
+    <div class="sunset-scene" aria-hidden="true">
+      <span class="particle" style="left:62.2%; top:6.2%; width:5px; height:5px; background:var(--vice-2); animation-duration:10.6s; animation-delay:-3.2s; --dx1:-17px; --dy1:-10px; --dx2:-8px; --dy2:-12px;"></span>
+      <span class="particle" style="left:69.2%; top:65.7%; width:6px; height:6px; background:var(--vice-2); animation-duration:12.1s; animation-delay:-8.7s; --dx1:-19px; --dy1:-18px; --dx2:9px; --dy2:-16px;"></span>
+      <span class="particle" style="left:34.6%; top:12.2%; width:3px; height:3px; background:var(--vice-3); animation-duration:14.9s; animation-delay:-4.8s; --dx1:-19px; --dy1:-22px; --dx2:7px; --dy2:14px;"></span>
+      <span class="particle" style="left:60.3%; top:79.8%; width:8px; height:8px; background:var(--vice-2); animation-duration:13.9s; animation-delay:-11.5s; --dx1:-19px; --dy1:-20px; --dx2:-10px; --dy2:12px;"></span>
+      <span class="particle" style="left:37.2%; top:36.6%; width:4px; height:4px; background:var(--vice-3); animation-duration:13.9s; animation-delay:-3.8s; --dx1:-17px; --dy1:-16px; --dx2:-8px; --dy2:9px;"></span>
+      <span class="particle" style="left:88.2%; top:64.6%; width:4px; height:4px; background:var(--vice-3); animation-duration:14.9s; animation-delay:-2.7s; --dx1:-20px; --dy1:15px; --dx2:-8px; --dy2:8px;"></span>
+      <span class="particle" style="left:49.4%; top:81.9%; width:6px; height:6px; background:var(--vice-2); animation-duration:10.9s; animation-delay:-9.0s; --dx1:19px; --dy1:21px; --dx2:10px; --dy2:-11px;"></span>
+      <span class="particle" style="left:12.3%; top:8.1%; width:3px; height:3px; background:var(--vice-2); animation-duration:13.4s; animation-delay:-2.5s; --dx1:17px; --dy1:15px; --dx2:11px; --dy2:-13px;"></span>
+      <span class="particle" style="left:14.4%; top:81.9%; width:5px; height:5px; background:var(--vice-3); animation-duration:9.8s; animation-delay:-6.8s; --dx1:10px; --dy1:22px; --dx2:-11px; --dy2:-15px;"></span>
+      <span class="particle" style="left:31.2%; top:60.2%; width:8px; height:8px; background:var(--vice-2); animation-duration:10.1s; animation-delay:-2.8s; --dx1:-17px; --dy1:10px; --dx2:15px; --dy2:8px;"></span>
+      <span class="particle" style="left:25.9%; top:53.9%; width:3px; height:3px; background:var(--vice-1); animation-duration:14.1s; animation-delay:-2.2s; --dx1:-12px; --dy1:21px; --dx2:-9px; --dy2:16px;"></span>
+      <span class="particle" style="left:88.5%; top:70.5%; width:4px; height:4px; background:var(--vice-3); animation-duration:11.8s; animation-delay:-3.9s; --dx1:15px; --dy1:11px; --dx2:-7px; --dy2:-12px;"></span>
+      <span class="particle" style="left:24.9%; top:23.4%; width:3px; height:3px; background:var(--vice-1); animation-duration:10.6s; animation-delay:-1.1s; --dx1:11px; --dy1:-13px; --dx2:8px; --dy2:-13px;"></span>
+      <span class="particle" style="left:84.3%; top:54.7%; width:4px; height:4px; background:var(--vice-4); animation-duration:14.7s; animation-delay:-9.7s; --dx1:-18px; --dy1:15px; --dx2:15px; --dy2:-13px;"></span>
+      <span class="particle" style="left:93.6%; top:12.7%; width:6px; height:6px; background:var(--vice-3); animation-duration:14.6s; animation-delay:-10.7s; --dx1:-12px; --dy1:12px; --dx2:-9px; --dy2:-15px;"></span>
+      <span class="particle" style="left:10.9%; top:75.1%; width:8px; height:8px; background:var(--vice-1); animation-duration:9.4s; animation-delay:-0.0s; --dx1:-22px; --dy1:-12px; --dx2:11px; --dy2:15px;"></span>
+    </div>
+    <div class="routes" aria-hidden="true">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <path d="M -50 620 C 150 560, 280 700, 460 600 S 760 460, 980 540 S 1250 480, 1320 420" />
+        <path d="M -80 220 C 120 300, 260 160, 480 240 S 740 340, 960 220 S 1180 140, 1300 200" />
+        <circle cx="460" cy="600" r="4.5"></circle>
+        <circle cx="980" cy="540" r="3.5"></circle>
+        <circle cx="480" cy="240" r="3.5"></circle>
+        <circle cx="960" cy="220" r="4.5"></circle>
+      </svg>
     </div>
 
-    <!-- Слайд 8: Анализ конкурентов -->
-    <div class="slide" data-index="7">
-        <div class="bg-orb"></div>
-        <h2>Анализ конкурентов</h2>
-        <div class="compare-table">
-            <div class="header-cell">Функция</div><div class="header-cell">Волонтер Хаб</div><div class="header-cell">Добро.ру</div><div class="header-cell">VolunteerMatch</div>
-            <div class="label-cell">Поиск мероприятий</div><div class="check">✅</div><div class="check">✅</div><div class="check">✅</div>
-            <div class="label-cell">Учет часов</div><div class="check">✅</div><div class="cross">❌</div><div class="check">✅</div>
-            <div class="label-cell">Лидерборд</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
-            <div class="label-cell">Кроссплатформа</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
-            <div class="label-cell">Темная тема</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
-            <div class="label-cell">Анимации UI</div><div class="check">✅</div><div class="cross">❌</div><div class="cross">❌</div>
-        </div>
+    <div class="topbar">
+      <div class="college">
+        <span class="eyebrow">СПб ГБ ПОУ</span>
+        <span class="name">Охтинский колледж</span>
+        <span class="group">Группа 491 · Специальность 09.02.07</span>
+      </div>
+      <div class="top-right"></div>
     </div>
 
-    <!-- Слайд 9: Дизайн -->
-    <div class="slide" data-index="8">
-        <div class="bg-orb"></div><div class="bg-orb"></div>
-        <h2>Дизайн и UI/UX</h2>
-        <div class="cards">
-            <div class="card"><div class="card-icon">🎨</div><h4>Современный минимализм</h4><p>Индиго-фиолетовая палитра, скругленные углы, мягкие тени</p></div>
-            <div class="card"><div class="card-icon">🌓</div><h4>Темная/светлая тема</h4><p>Автоматическое переключение по системным настройкам</p></div>
-            <div class="card"><div class="card-icon">✨</div><h4>Желейные анимации</h4><p>Reanimated + пружинные эффекты для карточек и переходов</p></div>
-        </div>
+    <div class="footer-rule"></div>
+
+    <div class="title-hero">
+      <div class="kicker reveal r1"><span class="dot"></span> Защита итоговой квалификационной работы</div>
+      <h1 class="h-title reveal r2" style="font-size:clamp(40px,6.4vw,84px);">Спасибо за внимание</h1>
+      <p class="h-sub reveal r3">Волонтер Хаб — мобильное приложение для поиска и записи на волонтёрские мероприятия</p>
     </div>
 
-    <!-- Слайд 10: Техническая архитектура -->
-    <div class="slide" data-index="9">
-        <h2>Техническая архитектура</h2>
-        <div class="tech-grid">
-            <div class="tech-item"><div class="emoji">⚛️</div><div class="name">React Native</div><div class="desc">Кроссплатформенный UI</div></div>
-            <div class="tech-item"><div class="emoji">📦</div><div class="name">Expo SDK</div><div class="desc">Сборка и нативные API</div></div>
-            <div class="tech-item"><div class="emoji">🗄️</div><div class="name">Supabase</div><div class="desc">PostgreSQL + Auth</div></div>
-            <div class="tech-item"><div class="emoji">🔄</div><div class="name">Expo Router</div><div class="desc">Файловая навигация</div></div>
-            <div class="tech-item"><div class="emoji">🏪</div><div class="name">Zustand</div><div class="desc">State management</div></div>
-            <div class="tech-item"><div class="emoji">🎬</div><div class="name">Reanimated</div><div class="desc">Нативные анимации</div></div>
-            <div class="tech-item"><div class="emoji">🔔</div><div class="name">Haptics</div><div class="desc">Тактильные отклики</div></div>
-            <div class="tech-item"><div class="emoji">📊</div><div class="name">Пагинация</div><div class="desc">Чанки по 10 событий</div></div>
-        </div>
+    <div class="footer">
+      <div class="author">
+        <span class="label">Выполнил студент</span>
+        <span class="name">Абросимов Максим Романович</span>
+      </div>
+      <div class="meta">
+        <span class="label">Год защиты</span>
+        <span class="value">2026</span>
+      </div>
     </div>
-
-    <!-- Слайд 11: База данных -->
-    <div class="slide" data-index="10">
-        <div class="bg-orb"></div>
-        <h2>Структура базы данных</h2>
-        <div class="cards">
-            <div class="card"><div class="card-icon">📋</div><h4>events</h4><p>Мероприятия: название, категория, город, дата, часы, места</p></div>
-            <div class="card"><div class="card-icon">👤</div><h4>profiles</h4><p>Профили: имя, никнейм, телефон, био, аватар, total_hours</p></div>
-            <div class="card"><div class="card-icon">📝</div><h4>bookings</h4><p>Записи: связь user-event, статус, время записи</p></div>
-        </div>
-        <p style="margin-top:30px; color:var(--text-secondary); z-index:1;">RLS политики, индексы, хранимые функции для подсчета часов</p>
-    </div>
-
-    <!-- Слайд 12: Функционал -->
-    <div class="slide" data-index="11">
-        <div class="bg-orb"></div><div class="bg-orb"></div>
-        <h2>Ключевой функционал</h2>
-        <div class="cards">
-            <div class="card"><div class="card-icon">🔍</div><h4>Поиск и фильтры</h4><p>По названию, категории, городу, дате с сортировкой</p></div>
-            <div class="card"><div class="card-icon">📅</div><h4>Мои записи</h4><p>Отслеживание статуса, отмена, начисление часов</p></div>
-            <div class="card"><div class="card-icon">🏆</div><h4>Лидерборд</h4><p>Таблица лидеров по часам с медалями и рейтингом</p></div>
-        </div>
-    </div>
-
-    <!-- Слайд 13: Особенности -->
-    <div class="slide" data-index="12">
-        <div class="bg-orb"></div>
-        <h2>Уникальные особенности</h2>
-        <div class="cards">
-            <div class="card"><div class="card-icon">🫧</div><h4>Желейный UI</h4><p>Пружинные анимации таб-бара, "влетание" в ивенты</p></div>
-            <div class="card"><div class="card-icon">📳</div><h4>Haptic Feedback</h4><p>Тактильные отклики на нажатия (iOS/Android)</p></div>
-            <div class="card"><div class="card-icon">🎯</div><h4>Умный кеш</h4><p>Мгновенная загрузка повторных просмотров</p></div>
-        </div>
-    </div>
-
-    <!-- Слайд 14: Идеи развития -->
-    <div class="slide" data-index="13">
-        <div class="bg-orb"></div><div class="bg-orb"></div>
-        <h2>Идеи для развития</h2>
-        <ul class="ideas-list">
-            <li>Система достижений и бейджей для волонтеров</li>
-            <li>Чат между участниками мероприятия</li>
-            <li>Интеграция с картами для построения маршрутов</li>
-            <li>Push-уведомления о новых мероприятиях поблизости</li>
-            <li>Геймификация: еженедельные челленджи и награды</li>
-            <li>Веб-версия с PWA для десктопа</li>
-        </ul>
-    </div>
-
-    <!-- Слайд 15: Спасибо -->
-    <div class="slide title-slide" data-index="14">
-        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
-        <h1>Спасибо!</h1>
-        <div class="subtitle-line"></div>
-        <p style="font-size:1.4rem; color: var(--text-secondary); z-index:1; margin-bottom:8px;">Волонтер Хаб — меняем мир вместе</p>
-        <p class="author">Абросимов Максим Романович</p>
-        <p style="color: var(--text-secondary); z-index:1; margin-top:20px;">2026</p>
-    </div>
+  </section>
 
 </div>
 
-<!-- Навигация -->
-<div class="counter" id="counter">1 / 15</div>
+<div class="counter" id="counter">1 / 18</div>
 <div class="nav">
-    <button onclick="prevSlide()" id="prevBtn">◀</button>
-    <div class="dots" id="dots"></div>
-    <button onclick="nextSlide()" id="nextBtn">▶</button>
+  <button class="arrow" id="prevBtn" type="button" aria-label="Предыдущий слайд">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="arrow" id="nextBtn" type="button" aria-label="Следующий слайд">›</button>
 </div>
 
 <script>
-    const slides = document.querySelectorAll('.slide');
-    const dotsContainer = document.getElementById('dots');
-    const counter = document.getElementById('counter');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    let currentSlide = 0;
-    const totalSlides = slides.length;  // теперь 15
+(function(){
 
-    for (let i = 0; i < totalSlides; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'dot' + (i === 0 ? ' active' : '');
-        dot.onclick = () => goToSlide(i);
-        dotsContainer.appendChild(dot);
-    }
+  /* ================= Theme toggle with ripple wipe ================= */
+  const themeBtn = document.getElementById('themeBtn');
+  const body = document.body;
 
-    function updateUI() {
-        slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
-        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
-        counter.textContent = `${currentSlide + 1} / ${totalSlides}`;
-        prevBtn.disabled = currentSlide === 0;
-        nextBtn.disabled = currentSlide === totalSlides - 1;
-    }
+  function currentTheme(){ return body.getAttribute('data-theme') || 'light'; }
 
-    function goToSlide(index) { currentSlide = index; updateUI(); }
-    function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
-    function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+  function paperColorFor(theme){
+    return theme === 'dark' ? '#150a26' : '#fbeef0';
+  }
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-        if (e.key === 'ArrowLeft') prevSlide();
+  function runRipple(x, y, nextTheme){
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    const maxDim = Math.max(window.innerWidth, window.innerHeight) * 2.2;
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    r.style.width = maxDim + 'px';
+    r.style.height = maxDim + 'px';
+    r.style.background = paperColorFor(nextTheme);
+    document.body.appendChild(r);
+
+    // Force the browser to commit the initial scale(0) state to a real frame
+    // before starting the transition, otherwise appendChild + transform-change
+    // can collapse into one style recalc and skip straight to the end state.
+    void r.offsetWidth;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        r.style.transition = 'transform 0.62s cubic-bezier(.22,.68,0,1)';
+        r.style.transform = 'translate(-50%,-50%) scale(1)';
+      });
     });
 
-    let touchStartX = 0;
-    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
-    document.addEventListener('touchend', (e) => {
-        const diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) nextSlide();
-            else prevSlide();
-        }
-    });
+    // flip the actual theme partway through, masked by the ripple covering the screen
+    setTimeout(() => { body.setAttribute('data-theme', nextTheme); }, 160);
 
-    updateUI();
+    setTimeout(() => { r.remove(); }, 700);
+  }
+
+  themeBtn.addEventListener('click', (e) => {
+    const rect = themeBtn.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const next = currentTheme() === 'light' ? 'dark' : 'light';
+    runRipple(x, y, next);
+  });
+
+  /* ================= Title language carousel (slide 0) ================= */
+  const translations = [
+    { lang:"ru", name:"Русский",   text:"Волонтер Хаб" },
+    { lang:"en", name:"English",   text:"Volunteer Hub" },
+    { lang:"zh", name:"中文",       text:"志愿者中心" },
+    { lang:"de", name:"Deutsch",   text:"Freiwilligen-Hub" },
+    { lang:"ja", name:"日本語",     text:"ボランティアハブ" },
+    { lang:"ko", name:"한국어",     text:"자원봉사 허브" },
+    { lang:"hi", name:"हिन्दी",      text:"स्वयंसेवक हब" },
+    { lang:"fr", name:"Français",  text:"Volontaire Hub" },
+    { lang:"es", name:"Español",   text:"Voluntario Hub" },
+    { lang:"pt", name:"Português", text:"Hub Voluntário" },
+  ];
+
+  const stage = document.getElementById('titleStage');
+  const dotsBox = document.getElementById('langDots');
+  const langTag = document.getElementById('langTag');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const pauseLabel = pauseBtn.querySelector('.pause-label');
+
+  translations.forEach((_, i) => {
+    const d = document.createElement('span');
+    if (i === 0) d.classList.add('is-tactive');
+    dotsBox.appendChild(d);
+  });
+  const tdots = dotsBox.querySelectorAll('span');
+
+  let tIndex = 0, tTimer = null, tPaused = false;
+  const HOLD_MS = 2400;
+
+  function renderSlot(i, active){
+    const slot = document.createElement('div');
+    slot.className = 'title-slot';
+    slot.dataset.lang = translations[i].lang;
+    slot.textContent = translations[i].text;
+    stage.appendChild(slot);
+    // Force a synchronous style/layout read so the browser commits the initial
+    // (opacity:0) state to a real frame before we flip to the active state.
+    // Without this, appendChild + class-add in the same microtask can collapse
+    // into a single style recalc and the transition never has a start frame to animate from.
+    void slot.offsetWidth;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (active) slot.classList.add('is-tactive');
+      });
+    });
+    return slot;
+  }
+
+  let currentSlot = renderSlot(0, true);
+  langTag.textContent = translations[0].name;
+
+  function goNextLang(){
+    const next = (tIndex + 1) % translations.length;
+    jumpToLang(next);
+  }
+
+  function jumpToLang(next){
+    const leaving = currentSlot;
+    leaving.classList.remove('is-tactive');
+    leaving.classList.add('is-tleaving');
+    setTimeout(() => leaving.remove(), 420);
+    currentSlot = renderSlot(next, true);
+    tIndex = next;
+    tdots.forEach((d,i) => d.classList.toggle('is-tactive', i === tIndex));
+    langTag.textContent = translations[tIndex].name;
+  }
+
+  function scheduleLang(){
+    clearTimeout(tTimer);
+    if (tPaused) return;
+    tTimer = setTimeout(() => { goNextLang(); scheduleLang(); }, HOLD_MS);
+  }
+  scheduleLang();
+
+  pauseBtn.addEventListener('click', () => {
+    tPaused = !tPaused;
+    pauseBtn.classList.toggle('is-paused', tPaused);
+    pauseBtn.setAttribute('aria-pressed', String(tPaused));
+    if (tPaused){
+      clearTimeout(tTimer);
+      if (tIndex !== 0) jumpToLang(0); // снимаем на русском сразу
+      pauseLabel.textContent = 'Воспроизвести перевод';
+    } else {
+      pauseLabel.textContent = 'Остановить на русском';
+      scheduleLang();
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(tTimer);
+    else if (!tPaused) scheduleLang();
+  });
+
+  /* ================= Slide navigation ================= */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  const dotsNav = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  let current = 0;
+
+  for (let i = 0; i < total; i++){
+    const dot = document.createElement('span');
+    if (i === 0) dot.classList.add('is-on');
+    dot.addEventListener('click', () => goTo(i));
+    dotsNav.appendChild(dot);
+  }
+  const navDots = dotsNav.querySelectorAll('span');
+
+  function render(){
+    slides.forEach((s, i) => {
+      s.classList.toggle('is-active', i === current);
+      s.classList.toggle('is-leaving-back', i < current);
+    });
+    navDots.forEach((d, i) => d.classList.toggle('is-on', i === current));
+    counter.textContent = `${current + 1} / ${total}`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  function goTo(i){ current = Math.max(0, Math.min(total - 1, i)); render(); }
+  function next(){ if (current < total - 1) goTo(current + 1); }
+  function prev(){ if (current > 0) goTo(current - 1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) (diff > 0 ? next() : prev());
+  });
+
+  render();
+})();
 </script>
 
 </body>

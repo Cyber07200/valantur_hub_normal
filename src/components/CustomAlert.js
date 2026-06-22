@@ -2,10 +2,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Modal } from 'react-native';
 import { X, CheckCircle, AlertTriangle, Info } from 'lucide-react-native';
+import { useTheme } from '../theme/ThemeProvider';
 
 const { width } = Dimensions.get('window');
 
 export default function CustomAlert({ visible, type, title, message, confirmText, cancelText, onConfirm, onCancel, icon }) {
+  const { colors } = useTheme();   // ← динамические цвета темы
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -21,16 +23,16 @@ export default function CustomAlert({ visible, type, title, message, confirmText
     }
   }, [visible]);
 
-  const getColors = () => {
+  const getAlertColors = () => {
     switch (type) {
       case 'success': return { bg: '#4CAF50', light: '#E8F5E9', text: '#2E7D32' };
       case 'error': return { bg: '#FF5252', light: '#FFEBEE', text: '#C62828' };
       case 'warning': return { bg: '#FF9800', light: '#FFF3E0', text: '#E65100' };
-      default: return { bg: '#6366F1', light: '#EEF2FF', text: '#3730A3' };
+      default: return { bg: colors.primary, light: colors.primaryLight, text: colors.text };
     }
   };
 
-  const colors = getColors();
+  const alertColors = getAlertColors();
 
   const getIcon = () => {
     switch (type) {
@@ -48,32 +50,33 @@ export default function CustomAlert({ visible, type, title, message, confirmText
   return (
     <Modal transparent visible={visible} animationType="none" onRequestClose={onCancel}>
       <View style={styles.overlay}>
-        <Animated.View style={[styles.container, { transform: [{ scale }], opacity }]}>
-          {/* Иконка */}
-          <View style={[styles.iconContainer, { backgroundColor: colors.light }]}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.bg }]}>
+        <Animated.View style={[styles.container, {
+          backgroundColor: colors.surface,   // ← фон из темы
+          transform: [{ scale }],
+          opacity,
+        }]}>
+          <View style={[styles.iconContainer, { backgroundColor: alertColors.light }]}>
+            <View style={[styles.iconCircle, { backgroundColor: alertColors.bg }]}>
               <IconComponent size={28} color="#FFFFFF" />
             </View>
           </View>
 
-          {/* Текст */}
-          <Text style={styles.title}>{title}</Text>
-          {message && <Text style={styles.message}>{message}</Text>}
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          {message && <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>}
 
-          {/* Кнопки */}
           <View style={styles.buttonsRow}>
             {cancelText && (
               <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
+                style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
                 onPress={onCancel}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelText}>{cancelText}</Text>
+                <Text style={[styles.cancelText, { color: colors.textSecondary }]}>{cancelText}</Text>
               </TouchableOpacity>
             )}
             {confirmText && (
               <TouchableOpacity
-                style={[styles.button, styles.confirmButton, { backgroundColor: colors.bg }]}
+                style={[styles.button, styles.confirmButton, { backgroundColor: alertColors.bg }]}
                 onPress={onConfirm}
                 activeOpacity={0.7}
               >
@@ -87,9 +90,6 @@ export default function CustomAlert({ visible, type, title, message, confirmText
   );
 }
 
-// ============================================
-// ХУК ДЛЯ УПРАВЛЕНИЯ АЛЕРТОМ
-// ============================================
 export function useCustomAlert() {
   const [alertState, setAlertState] = React.useState({
     visible: false,
@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
   },
   container: {
     width: width - 60,
-    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     paddingHorizontal: 24,
     paddingTop: 40,
@@ -175,14 +174,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 8,
   },
   message: {
     fontSize: 15,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 21,
     marginBottom: 24,
@@ -200,14 +197,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: 'transparent',
   },
   cancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
   },
   confirmButton: {
     shadowColor: '#000',

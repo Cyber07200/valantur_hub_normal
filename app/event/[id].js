@@ -10,6 +10,7 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { useBookings } from '../../src/hooks/useBookings';
 import { useEventStore } from '../../src/stores/eventStore';
 import { safeHaptic } from '../../src/utils/platform';
+import { useTranslation } from '../../src/i18n/I18nContext';
 
 export default function EventDetailScreen() {
   const params = useLocalSearchParams();
@@ -21,12 +22,12 @@ export default function EventDetailScreen() {
   const { bookEvent, bookings } = useBookings();
   const getEventById = useEventStore((state) => state.getEventById);
   const refreshEvent = useEventStore((state) => state.refreshEvent);
+  const { t } = useTranslation();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingInProgress, setBookingInProgress] = useState(false);
 
-  // Анимация
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(50)).current;
@@ -39,7 +40,6 @@ export default function EventDetailScreen() {
     ]).start();
   }, []);
 
-  // При каждом показе экрана обновляем данные мероприятия
   useFocusEffect(
     useCallback(() => {
       if (id) {
@@ -66,8 +66,11 @@ export default function EventDetailScreen() {
   const handleBook = async () => {
     if (!user) {
       global.showAlert?.({
-        type: 'info', title: 'Нужно войти', message: 'Авторизуйтесь, чтобы записаться',
-        confirmText: 'Войти', cancelText: 'Отмена',
+        type: 'info',
+        title: t.loginRequired || 'Нужно войти',
+        message: t.loginRequiredMessage || 'Авторизуйтесь, чтобы записаться',
+        confirmText: t.loginButton || 'Войти',
+        cancelText: t.cancel || 'Отмена',
         onConfirm: () => router.push('/auth/login'),
       });
       return;
@@ -79,27 +82,34 @@ export default function EventDetailScreen() {
       weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
     });
 
+    // ✅ Всплывающее окно подтверждения с переводами
     global.showAlert?.({
       type: 'success',
-      title: 'Записаться?',
-      message: `${event.title}\n📅 ${formattedDate}\n📍 ${event.city}\n🕐 ${event.duration_hours} ч\n+${event.duration_hours} ч в профиль`,
-      confirmText: 'Да, записаться',
-      cancelText: 'Отмена',
+      title: t.bookingConfirmTitle || 'Записаться?',
+      message: `${event.title}\n📅 ${formattedDate}\n📍 ${event.city}\n🕐 ${event.duration_hours} ${t.hourAbbr || 'ч'}\n+${event.duration_hours} ${t.hourAbbr || 'ч'} ${t.bookingInProfile || 'в профиль'}`,
+      confirmText: t.bookingConfirmButton || 'Да, записаться',
+      cancelText: t.bookingCancelButton || 'Отмена',
       onConfirm: async () => {
         setBookingInProgress(true);
         safeHaptic('medium');
         const result = await bookEvent(id);
         if (result.success) {
           safeHaptic('success');
-          // Мгновенно обновляем данные мероприятия
           await refreshEvent(id);
-          // Обновляем профиль (часы)
           if (global.refreshProfile) global.refreshProfile();
-          // Обновляем список бронирований (счётчик в профиле)
           if (global.refreshBookings) global.refreshBookings();
-          global.showNotification?.('success', 'Вы записаны!', `${event.title}\n+${event.duration_hours} ч`);
+          global.showNotification?.(
+            'success',
+            t.bookingSuccessNotification || 'Вы записаны!',
+            `${event.title}\n+${event.duration_hours} ${t.hourAbbr || 'ч'}`
+          );
         } else {
-          global.showAlert?.({ type: 'error', title: 'Ошибка', message: result.message, confirmText: 'OK' });
+          global.showAlert?.({
+            type: 'error',
+            title: t.error || 'Ошибка',
+            message: result.message,
+            confirmText: 'OK',
+          });
         }
         setBookingInProgress(false);
       },
@@ -141,7 +151,9 @@ export default function EventDetailScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>Мероприятие</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
+            {t.event || 'Мероприятие'}
+          </Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -193,7 +205,10 @@ export default function EventDetailScreen() {
           {isBooked ? (
             <View style={[styles.bookedBtn, { backgroundColor: colors.success + '20' }]}>
               <CheckCircle size={20} color={colors.success} />
-              <Text style={[styles.bookedText, { color: colors.success }]}>Вы записаны</Text>
+              {/* ✅ Перевод "Вы записаны" */}
+              <Text style={[styles.bookedText, { color: colors.success }]}>
+                {t.youAreBooked || 'Вы записаны'}
+              </Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -205,7 +220,12 @@ export default function EventDetailScreen() {
               {bookingInProgress ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.bookBtnText}>{spotsLeft === 0 ? 'Мест нет' : 'Записаться'}</Text>
+                /* ✅ Перевод кнопки "Записаться" */
+                <Text style={styles.bookBtnText}>
+                  {spotsLeft === 0
+                    ? t.noSpots || 'Мест нет'
+                    : t.bookButton || 'Записаться'}
+                </Text>
               )}
             </TouchableOpacity>
           )}

@@ -76,7 +76,10 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user) loadProfile();
+      if (user) {
+        loadProfile();
+        if (global.refreshBookings) global.refreshBookings();
+      }
     }, [user, loadProfile])
   );
 
@@ -203,7 +206,7 @@ export default function ProfileScreen() {
       full_name: editFullName,
       nickname: editNickname,
       phone: editPhone,
-      bio: editBio.trim().substring(0, 50),   // ← ограничение 50 символов
+      bio: editBio.trim().substring(0, 50),
     });
     if (result.success) {
       safeHaptic('success');
@@ -217,8 +220,11 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     global.showAlert?.({
-      type: 'warning', title: t.warning, message: 'Вы уверены?',
-      confirmText: t.confirm, cancelText: t.cancel,
+      type: 'warning',
+      title: t.logoutTitle || 'Выйти?',
+      message: t.logoutMessage || 'Вы уверены, что хотите выйти?',
+      confirmText: t.logoutConfirm || 'Выйти',
+      cancelText: t.logoutCancel || 'Отмена',
       onConfirm: () => { safeHaptic('medium'); signOut(); },
     });
   };
@@ -289,11 +295,11 @@ export default function ProfileScreen() {
               icon={BookOpen}
               label={t.bio}
               value={editBio}
-              onChangeText={(text) => setEditBio(text.substring(0, 50))}   // ← обрезаем при вводе
+              onChangeText={(text) => setEditBio(text.substring(0, 50))}
               colors={colors}
               multiline
               numberOfLines={4}
-              maxLength={50}            // ← ограничение клавиатуры
+              maxLength={50}
             />
             <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={saving}>
               {saving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.saveBtnText}>{t.save}</Text>}
@@ -349,7 +355,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Модальное окно настроек (с новыми языками) */}
+      {/* Модальное окно настроек */}
       <Modal visible={showSettings} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -404,10 +410,10 @@ export default function ProfileScreen() {
                 }]}>
                   <Text style={[lbStyles.myLabel, { color: colors.primary }]}>{t.yourPlace}</Text>
                   <Animated.Text style={[lbStyles.myRank, {
-                    color: colors.text,   // ← меняется с темой
+                    color: colors.text,
                     transform: [{ scale: rankBounce }]
                   }]}>#{userRank}</Animated.Text>
-                  <Text style={[lbStyles.myHours, { color: colors.text }]}>{profile.total_hours || 0} ч</Text>
+                  <Text style={[lbStyles.myHours, { color: colors.text }]}>{profile.total_hours || 0} {t.hourAbbr}</Text>
                 </Animated.View>
               )}
 
@@ -428,7 +434,7 @@ export default function ProfileScreen() {
                     const borderColor = isTop3
                       ? (index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32')
                       : colors.border;
-                    const nameColor = isTop3 ? '#1F2937' : colors.text;        // тёмный для светлого фона
+                    const nameColor = isTop3 ? '#1F2937' : colors.text;
                     const nickColor = isTop3 ? '#4B5563' : colors.textSecondary;
 
                     return (
@@ -449,7 +455,7 @@ export default function ProfileScreen() {
                         </View>
                         <View style={lbStyles.hoursBlock}>
                           <Star size={14} color={isTop3 ? (index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32') : colors.primary} />
-                          <Text style={[lbStyles.hours, { color: isTop3 ? '#1F2937' : colors.text }]}>{item.total_hours || 0} ч</Text>
+                          <Text style={[lbStyles.hours, { color: isTop3 ? '#1F2937' : colors.text }]}>{item.total_hours || 0} {t.hourAbbr}</Text>
                         </View>
                       </View>
                     );
